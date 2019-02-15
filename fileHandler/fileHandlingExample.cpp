@@ -20,10 +20,10 @@ int main(int argc, char** argv)
 	fileHandler test("TestFile.test");
 
 	// Looped the chunk reading for some examples
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 3; i++)
 	{
 		test.readNextChunk();
-		cout << test.buffer;
+		cout << "Chunk No " << i << ":" << test.buffer << endl;
 	}
 	
 	// reseting the pointer to the start of the file
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 
 	// reading that chunk and writing to console
 	test.readNextChunk();
-	cout << test.buffer;
+	cout << "Chunk No 1:" << test.buffer << endl;
 
 	return 0;
 }
