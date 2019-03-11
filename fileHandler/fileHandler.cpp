@@ -20,7 +20,7 @@ fileHandler::fileHandler(string fileNameGiven, size_t currChunkSize)
 	#if defined(_WIN32)
 		system("cd");
 	#elif defined(__unix__)
-		system("ls");
+		system("pwd");
 	#endif // _WIN32
 		exit(1);
 	}
