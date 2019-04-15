@@ -1,4 +1,4 @@
-#include "fileChunkingClass/fileHandler.h"
+#include "../../fileChunkingClass/fileHandler.h"
 
 #include <algorithm>
 
@@ -10,7 +10,7 @@
 
 // using size_t is too inconsistent between OS
 #define tablePointerType uint16_t
-#define hayCountType 2
+#define hayCountType 
 
 #elif // _WIN32
 
@@ -143,17 +143,17 @@ __global__ void pfacSearch(unsigned int* needleFound, bool* results, char* hayst
 	return;
 }
 
-void resultParse(vector<unsigned int>& foundPatterns, bool* buffer, unsigned long int chunkNo)
+void resultParse(vector<unsigned int>* foundPatterns, bool* buffer, unsigned long int chunkNo)
 { // Plan was there to make this even easier using bools without padding using bitshifting methods
 	
 	for (unsigned int i = 0; i < chunkSize; ++i)
 	{
 		if (buffer[i])
-			foundPatterns.push_back(i + (chunkNo * chunkSize));
+		{
+			foundPatterns->push_back(i + (chunkNo * chunkSize));
+		}
 	}
 	
-	cout << endl << "Parsed Chunk " << chunkNo << endl;
-
 	return;
 }
 
@@ -170,6 +170,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	// Start the chunk fetching
 	chunkManager.readFirstChunk();
 	
+
 	// Cuda Management device property management //
 	cudaError_t cudaStatus;
 	cudaDeviceProp prop;
@@ -188,6 +189,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		cerr << endl << "GetDeviceProperties failed!" << endl;  goto Error;
 	}
 	
+
 	// Start GPU Mallocs //
 	char* cuda_haystack = 0; // Array of Char's containing chunks of haystack
 	bool* cuda_resultArray = 0; // Array of Boolean Values indicating found pattern
@@ -213,9 +215,9 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		cerr << endl << "cudaMalloc resultArray failed!" << endl;  goto Error;
 	}
 
-	while (chunkManager.getCurrChunkNo() < chunkManager.getTotalChunks()-1)
+	while (chunkManager.getCurrChunkNo() < chunkManager.getTotalChunks()-1) // Loop through all of the available chunks
 	{
-		// Copy haystack into the GPU
+		// Copy haystack into the GPU //
 		chunkManager.waitForRead(); // Make sure the chunk is read in
 
 		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, chunkSize * sizeof(char), cudaMemcpyHostToDevice);
@@ -224,10 +226,13 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		}
 
 		chunkManager.asyncReadNextChunk();
+#if DEBUG
 		cout << endl << chunkManager.getCurrChunkNo() << " Complete of " << chunkManager.getTotalChunks() << endl;
+#endif // DEBUG
+		
 
 		// Run Search of current chunk on Device //
-													// u long				bool			 char[]			u long		tablePoint	thrust::device_ptr
+		// Types										// u long				bool			 char[]			u long		tablePoint	thrust::device_ptr
 		pfacSearch <<< 16, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
 
 		// Check for any errors launching the kernel
@@ -236,11 +241,13 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 			cerr << endl << "addKernel launch failed: " << cudaGetErrorString(cudaStatus) << endl;  goto Error;
 		}
 
-		// Wait for GPU to finish before restarting with the next chunk//
+
+		// Wait for GPU to finish before restarting with the next chunk //
 		cudaDeviceSynchronize();
 		if (cudaStatus != cudaSuccess) {
 			cerr << endl << "cudaDeviceSynchronize returned error code " << cudaStatus << " after launching addKernel!" << endl;  goto Error;
 		}
+
 
 		// Gather Results // 
 		cudaStatus = cudaMemcpy(&needlesFound, cuda_needlesFound, sizeof(unsigned int), cudaMemcpyDeviceToHost);
@@ -264,8 +271,9 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 			if (processResults.joinable())
 				processResults.join();
 
-			resultParse(foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo());
+			processResults = thread(resultParse, &foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo());
 		}
+
 
 		// Reset the GPU values //
 		cudaStatus = cudaMemset(cuda_needlesFound, 0 , sizeof(unsigned int));
@@ -293,6 +301,13 @@ int main()
 {
 	// Generate the PFAC table on CPU before we start
 	vector<string> patterns = { "any", "three", "that", "rod", "word" };
+
+	if (patterns.size() > (1 << 13))
+	{
+		cerr << endl << endl << "There was an issue regarding the number of patterns" << endl << "The implementation may not be able to function correctly with this. tablePointerType may require being increased. If this error has arose then hardware should have advanced to also be able to handle it";
+		exit(1);
+	}
+
 	host_vector<tablePointerType> pfacMatching = pfacLookupCreate(patterns);
 	vector<unsigned int> results;
 
@@ -305,14 +320,17 @@ int main()
 
 	if (results.size())
 	{
+		cout << endl << results.size() << " Patterns Found";
 		//for (int i = 0; i < results.size(); ++i)
 		//{
 		//	cout << endl << "Found Patterns in chunk " << results[i].first << endl;
 			//for (int j = 0; j < results[i].second.size(); ++j)
 				//cout << results[i].second[j] << " ";
-			for (int j = 0; j < results.size(); ++j)
-				cout << results[j] << " ";
-			//}
+		//}
+
+		//for (int j = 0; j < results.size(); ++j)
+		//	cout << results[j] << " ";
+
 	}
 	else
 	{
