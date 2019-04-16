@@ -10,7 +10,7 @@
 
 // using size_t is too inconsistent between OS
 #define tablePointerType uint16_t
-#define hayCountType 
+#define hayCountType unsigned int
 
 #elif // _WIN32
 
@@ -35,7 +35,7 @@ using std::string;
 using std::thread;
 using std::pair;
 
-#define chunkSize (unsigned long int)768*KB
+#define chunkSize (unsigned long int)60*MB
 
 // This could be changed to 257 to allow for wildcards after setup to allow for this
 #define rowSize (int)256
@@ -100,7 +100,7 @@ host_vector<tablePointerType> pfacLookupCreate(vector<string> patterns)
 	}
 
 #if DEBUG
-	cout << endl << "PFAC SIZE - " << table.size() << " x " << rowSize << endl;
+	cout << endl << "PFAC SIZE - " << table.size() << endl;
 #endif // DEBUG
 
 
@@ -143,17 +143,19 @@ __global__ void pfacSearch(unsigned int* needleFound, bool* results, char* hayst
 	return;
 }
 
-void resultParse(vector<unsigned int>* foundPatterns, bool* buffer, unsigned long int chunkNo)
+void resultParse(vector<unsigned int>* foundPatterns, bool* buffer, unsigned long int chunkNo, unsigned long int chunksize)
 { // Plan was there to make this even easier using bools without padding using bitshifting methods
 	
-	for (unsigned int i = 0; i < chunkSize; ++i)
+	for (unsigned int i = 0; i < chunksize; ++i)
 	{
 		if (buffer[i])
 		{
 			foundPatterns->push_back(i + (chunkNo * chunkSize));
 		}
 	}
-	
+
+	memset(buffer, false, chunkSize);
+
 	return;
 }
 
@@ -162,10 +164,10 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	// Local Variables
 	thread processResults;
 
-	unsigned int needlesFound = 0; // triage if the search of starting bytes is even required
+	hayCountType needlesFound = 0; // triage if the search of starting bytes is even required
 
 	/// Haybits
-	bool cpu_resultArrayBuffer[chunkSize]; // Buffer to hold the returning bit array from the GPU
+	bool* cpu_resultArrayBuffer = new bool[chunkSize]; // Buffer to hold the returning bit array from the GPU
 	
 	// Start the chunk fetching
 	chunkManager.readFirstChunk();
@@ -194,7 +196,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	char* cuda_haystack = 0; // Array of Char's containing chunks of haystack
 	bool* cuda_resultArray = 0; // Array of Boolean Values indicating found pattern
 
-	unsigned int* cuda_needlesFound = 0; // Single Unsigned int
+	hayCountType* cuda_needlesFound = 0; // Single Unsigned int
 
 	// Copy of the PFAC table
 	cuda_pfacTable = pfacTable; // Populating GPU Vector
@@ -210,12 +212,13 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		cerr << endl << "cudaMalloc resultArray failed!" << endl;  goto Error;
 	}
 
-	cudaStatus = cudaMalloc((void**)&cuda_needlesFound, sizeof(unsigned int)); // Malloc one unsigned int
+	cudaStatus = cudaMalloc((void**)&cuda_needlesFound, sizeof(hayCountType)); // Malloc one unsigned int
 	if (cudaStatus != cudaSuccess) {
 		cerr << endl << "cudaMalloc resultArray failed!" << endl;  goto Error;
 	}
 
-	while (chunkManager.getCurrChunkNo() < chunkManager.getTotalChunks()-1) // Loop through all of the available chunks
+	// Current chunk is the chunk that is being fetched. Loop this until we're fetching the final chunk
+	while (chunkManager.getCurrChunkNo() < chunkManager.getTotalChunks() - 1) // Loop through all of the available chunks
 	{
 		// Copy haystack into the GPU //
 		chunkManager.waitForRead(); // Make sure the chunk is read in
@@ -225,15 +228,15 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 			cerr << endl << "cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
 		}
 
-		chunkManager.asyncReadNextChunk();
 #if DEBUG
-		cout << endl << chunkManager.getCurrChunkNo() << " Complete of " << chunkManager.getTotalChunks() << endl;
+		cout << endl << chunkManager.getCurrChunkNo() + 1 << " Complete of " << chunkManager.getTotalChunks() << endl;
 #endif // DEBUG
-		
 
+		chunkManager.asyncReadNextChunk();
+		
 		// Run Search of current chunk on Device //
 		// Types										// u long				bool			 char[]			u long		tablePoint	thrust::device_ptr
-		pfacSearch <<< 16, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
+		pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
 
 		// Check for any errors launching the kernel
 		cudaStatus = cudaGetLastError();
@@ -250,41 +253,98 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 
 
 		// Gather Results // 
-		cudaStatus = cudaMemcpy(&needlesFound, cuda_needlesFound, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+		cudaStatus = cudaMemcpy(&needlesFound, cuda_needlesFound, sizeof(hayCountType), cudaMemcpyDeviceToHost);
 		if (cudaStatus != cudaSuccess) {
 			cerr << endl << "cudaMemcpy to Host of cuda_needlesFound failed!" << endl;  goto Error;
 		}
 
 		if (needlesFound == 0)
 		{
-			cout << endl << "There were no Needles found in chunk ";
+			cout << endl << "There were no Needles found in chunk " << chunkManager.getCurrChunkNo()-1;
 		}
 		else
 		{
-			cout << endl << "Needles found equals " << needlesFound << endl;
+			cout << endl << "Needles in chunk " << chunkManager.getCurrChunkNo()-1 << " found equals " << needlesFound << endl;
 			
+
+			if (processResults.joinable())
+				processResults.join();
+
 			cudaStatus = cudaMemcpy(cpu_resultArrayBuffer, cuda_resultArray, chunkSize, cudaMemcpyDeviceToHost);
 			if (cudaStatus != cudaSuccess) {
 				cerr << endl << "cudaMemcpy to Host of cuda_resultArray failed!" << endl;  goto Error;
 			}
 
-			if (processResults.joinable())
-				processResults.join();
 
-			processResults = thread(resultParse, &foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo());
+			processResults = thread(resultParse, &foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo()-1, chunkSize);
 		}
 
 
 		// Reset the GPU values //
-		cudaStatus = cudaMemset(cuda_needlesFound, 0 , sizeof(unsigned int));
+		cudaStatus = cudaMemset(cuda_needlesFound, 0, sizeof(hayCountType));
 		if (cudaStatus != cudaSuccess) {
 			cerr << endl << "cudaMemset of cuda_needlesFound failed!" << endl;  goto Error;
 		}
 
-		cudaStatus = cudaMemset(cuda_resultArray, 0, chunkSize);
+		cudaStatus = cudaMemset(cuda_resultArray, false, chunkSize);
 		if (cudaStatus != cudaSuccess) {
 			cerr << endl << "cudaMemset of cuda_resultArray failed!" << endl;  goto Error;
 		}
+	}
+
+	// Final Run
+	chunkManager.waitForRead(); // Make sure the chunk is read in
+
+	cudaMemset(cuda_haystack, 0, chunkSize);
+
+	cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, chunkSize * sizeof(char), cudaMemcpyHostToDevice);
+	if (cudaStatus != cudaSuccess) {
+		cerr << endl << "cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
+	}
+
+#if DEBUG
+	cout << endl << chunkManager.getCurrChunkNo() + 1 << " Complete of " << chunkManager.getTotalChunks() << endl;
+#endif // DEBUG
+	
+	// Run Search of current chunk on Device //															 Remainder Size
+	// Types										// u long				bool			 char[]		  u long \/		tablePoint	thrust::device_ptr
+	pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
+
+	// Gather Results // 
+	cudaStatus = cudaMemcpy(&needlesFound, cuda_needlesFound, sizeof(hayCountType), cudaMemcpyDeviceToHost);
+	if (cudaStatus != cudaSuccess) {
+		cerr << endl << "cudaMemcpy to Host of cuda_needlesFound failed!" << endl;  goto Error;
+	}
+
+	if (needlesFound == 0)
+	{									// No chunk is being fetched so CurrChunkNo is current not the upcoming
+		cout << endl << "There were no Needles found in chunk " << chunkManager.getCurrChunkNo();
+	}
+	else
+	{
+		cout << endl << "Needles found in chunk " << chunkManager.getCurrChunkNo() << " equals " << needlesFound << endl;
+
+		//if (chunkManager.remainder) // If we have a remainder or just a full chunk
+		//{
+		//																	 ///Haybits
+		//	cudaStatus = cudaMemcpy(cpu_resultArrayBuffer, cuda_resultArray, chunkManager.remainder, cudaMemcpyDeviceToHost);
+		//}
+		//else
+		//{
+																			 ///Haybits
+			cudaStatus = cudaMemcpy(cpu_resultArrayBuffer, cuda_resultArray, chunkSize, cudaMemcpyDeviceToHost);
+		//}
+
+		// If the MemCopy dies
+		if (cudaStatus != cudaSuccess) {
+			cerr << endl << "cudaMemcpy to Host of cuda_resultArray failed!" << endl;  goto Error;
+		}
+	
+		if (processResults.joinable()) // So we don't write to the vector between the writes of the thread
+			processResults.join();	   /// Doing the vector of pairs for results per chunk would solve this but there's a overhead cost to consider
+
+
+		resultParse(&foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo(), chunkSize);
 	}
 
 Error:
@@ -300,7 +360,7 @@ Error:
 int main()
 {
 	// Generate the PFAC table on CPU before we start
-	vector<string> patterns = { "any", "three", "that", "rod", "word" };
+	vector<string> patterns = { "anything", "three", "that'll", "roderick", "wordly" };
 
 	if (patterns.size() > (1 << 13))
 	{
@@ -311,6 +371,7 @@ int main()
 	host_vector<tablePointerType> pfacMatching = pfacLookupCreate(patterns);
 	vector<unsigned int> results;
 
+	// With the above patterns there is definetly 2191 patterns in this file
 	fileHandler chunkManager("200MBWordlist.test", chunkSize);
 
 	tablePointerType startingRow = patterns.size() + 1;
