@@ -374,6 +374,9 @@ int main()
 	// Generate the PFAC table on CPU before we start
 	vector<string> patterns = { "anything", "three", "that'll", "roderick", "wordly" };
 
+	// 1109 patterns should be found with this test case
+	//vector<string> patterns = { "why" };
+
 	if (patterns.size() > (1 << 13))
 	{
 		cerr << endl << endl << "There was an issue regarding the number of patterns" << endl << "The implementation may not be able to function correctly with this. tablePointerType may require being increased. If this error has arose then hardware should have advanced to also be able to handle it";
