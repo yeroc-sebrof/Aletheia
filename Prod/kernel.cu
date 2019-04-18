@@ -169,10 +169,6 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	/// Haybits
 	bool* cpu_resultArrayBuffer = new bool[chunkSize + chunkManager.getOverlay()]; // Buffer to hold the returning bit array from the GPU
 	
-	// Start the chunk fetching
-	chunkManager.readFirstChunk();
-	
-
 	// Cuda Management device property management //
 	cudaError_t cudaStatus;
 	cudaDeviceProp prop;
