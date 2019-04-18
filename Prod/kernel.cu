@@ -41,7 +41,7 @@ using std::pair;
 #define rowSize (int)256
 
 // Setup //
-host_vector<tablePointerType> pfacLookupCreate(vector<string> patterns)
+host_vector<tablePointerType> pfacLookupCreate(vector<string>& patterns)
 {
 	/*
 	The PFAC table can be described as:
@@ -167,7 +167,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	hayCountType needlesFound = 0; // triage if the search of starting bytes is even required
 
 	/// Haybits
-	bool* cpu_resultArrayBuffer = new bool[chunkSize]; // Buffer to hold the returning bit array from the GPU
+	bool* cpu_resultArrayBuffer = new bool[chunkSize + chunkManager.getOverlay()]; // Buffer to hold the returning bit array from the GPU
 	
 	// Start the chunk fetching
 	chunkManager.readFirstChunk();
@@ -201,13 +201,14 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	// Copy of the PFAC table
 	cuda_pfacTable = pfacTable; // Populating GPU Vector
 
-	cudaStatus = cudaMalloc((void**)&cuda_haystack, chunkSize); // Assigning haystack to memory. Char's fit within chunkSize
+	cudaStatus = cudaMalloc((void**)&cuda_haystack, chunkSize + chunkManager.getOverlay()); // Assigning haystack to memory. Char's fit within chunkSize
 	if (cudaStatus != cudaSuccess) {
 		cerr << endl << "cudaMalloc cuda_haystack failed!" << endl;  goto Error;
 	}
 
 	/// Haybits
-	cudaStatus = cudaMalloc((void**)&cuda_resultArray, chunkSize); // Assigning result array. Bool == 1 byte
+	cudaStatus = cudaMalloc((void**)&cuda_resultArray, chunkSize); // Assigning result array
+	// Results from the search will not span outwith the chunksize range. Overlay not required
 	if (cudaStatus != cudaSuccess) {
 		cerr << endl << "cudaMalloc resultArray failed!" << endl;  goto Error;
 	}
@@ -223,7 +224,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		// Copy haystack into the GPU //
 		chunkManager.waitForRead(); // Make sure the chunk is read in
 
-		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, chunkSize * sizeof(char), cudaMemcpyHostToDevice);
+		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, (chunkSize + chunkManager.getOverlay())* sizeof(char), cudaMemcpyHostToDevice);
 		if (cudaStatus != cudaSuccess) {
 			cerr << endl << "cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
 		}
@@ -295,20 +296,34 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	// Final Run
 	chunkManager.waitForRead(); // Make sure the chunk is read in
 
-	cudaMemset(cuda_haystack, 0, chunkSize);
+	cudaMemset(cuda_haystack, 0, chunkSize + chunkManager.getOverlay()); // Anything else should not be searched but this is insurance
 
-	cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, chunkSize * sizeof(char), cudaMemcpyHostToDevice);
+	// Determine how much data must be copied for the final chunk
+	if (chunkManager.remainder)
+	{
+		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer,
+			(chunkManager.remainder + chunkManager.getOverlay()) * sizeof(char),
+			cudaMemcpyHostToDevice);
+	}
+	else
+	{
+		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer,
+			(chunkSize + chunkManager.getOverlay()) * sizeof(char),
+			cudaMemcpyHostToDevice);
+	}
+
 	if (cudaStatus != cudaSuccess) {
-		cerr << endl << "cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
+		cerr << endl << "Final cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
 	}
 
 #if DEBUG
 	cout << endl << chunkManager.getCurrChunkNo() + 1 << " Complete of " << chunkManager.getTotalChunks() << endl;
 #endif // DEBUG
-	
-	// Run Search of current chunk on Device //															 Remainder Size
-	// Types										// u long				bool			 char[]		  u long \/		tablePoint	thrust::device_ptr
-	pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
+
+	// Run Search of current chunk on Device //
+	pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack,
+		chunkManager.remainder ? chunkManager.remainder : chunkSize,
+		startingRow, device_pointer_cast(&cuda_pfacTable[0]));
 
 	// Gather Results // 
 	cudaStatus = cudaMemcpy(&needlesFound, cuda_needlesFound, sizeof(hayCountType), cudaMemcpyDeviceToHost);
@@ -324,16 +339,16 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	{
 		cout << endl << "Needles found in chunk " << chunkManager.getCurrChunkNo() << " equals " << needlesFound << endl;
 
-		//if (chunkManager.remainder) // If we have a remainder or just a full chunk
-		//{
-		//																	 ///Haybits
-		//	cudaStatus = cudaMemcpy(cpu_resultArrayBuffer, cuda_resultArray, chunkManager.remainder, cudaMemcpyDeviceToHost);
-		//}
-		//else
-		//{
+		if (chunkManager.remainder) // If we have a remainder or just a full chunk
+		{
+																			 ///Haybits
+			cudaStatus = cudaMemcpy(cpu_resultArrayBuffer, cuda_resultArray, chunkManager.remainder, cudaMemcpyDeviceToHost);
+		}
+		else
+		{
 																			 ///Haybits
 			cudaStatus = cudaMemcpy(cpu_resultArrayBuffer, cuda_resultArray, chunkSize, cudaMemcpyDeviceToHost);
-		//}
+		}
 
 		// If the MemCopy dies
 		if (cudaStatus != cudaSuccess) {
@@ -344,7 +359,8 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 			processResults.join();	   /// Doing the vector of pairs for results per chunk would solve this but there's a overhead cost to consider
 
 
-		resultParse(&foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo(), chunkSize);
+		resultParse(&foundPatterns, cpu_resultArrayBuffer, chunkManager.getCurrChunkNo(),
+			chunkManager.remainder ? chunkManager.remainder : chunkSize);
 	}
 
 Error:
@@ -372,7 +388,7 @@ int main()
 	vector<unsigned int> results;
 
 	// With the above patterns there is definetly 2191 patterns in this file
-	fileHandler chunkManager("200MBWordlist.test", chunkSize);
+	fileHandler chunkManager("200MBWordlist.test", chunkSize, patterns.back().size());
 
 	tablePointerType startingRow = patterns.size() + 1;
 
