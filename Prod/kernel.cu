@@ -68,15 +68,15 @@ host_vector<tablePointerType> pfacLookupCreate(vector<string>& patterns)
 	host_vector<tablePointerType> table((2 + patterns.size()) * rowSize);
 	// This has been initialising as 0 making resizing easy
 
-	size_t currentPlace;
+	unsigned long int currentPlace;
 
 	// for each pattern
-	for (int i = 0; i < patterns.size(); ++i)
+	for (unsigned int i = 0; i < patterns.size(); ++i)
 	{
 		currentPlace = patterns.size() + 1;
 
 		// for each character bar last
-		for (int j = 0; j < patterns[i].size() - 1; ++j)
+		for (unsigned int j = 0; j < patterns[i].size() - 1; ++j)
 		{
 			// if the current place doesnt point anywhere
 			if (table[(currentPlace * rowSize) + patterns[i][j]] == 0)
