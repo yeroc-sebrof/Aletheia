@@ -32,7 +32,7 @@ import wget
 
 debug = True
 
-if (os.path.isfile("aletheia.h")) & (not debug):
+if (os.path.isfile("aletheia.conf")) & (not debug):
     if input("There already exists a config file.\nDo you wish to continue?").upper()[0] != "Y":
         print("\nYou specified you do not wish to continue, exiting")
         exit(1)
@@ -95,6 +95,10 @@ def halfway_hex_conv(not_quite_hex):
         response = halfWayHexSearch.search(not_quite_hex)
 
     return not_quite_hex
+
+
+def all_hex_pls(not_all_hex):
+    return
 
 
 print("Starting to manage each pattern")
@@ -164,33 +168,12 @@ if debug:
 
 # Open new config file to write to
 try:
-    existingConf = open("aletheia.h", "xt+")
+    existingConf = open("aletheia.conf", "xt+")
 except FileExistsError:
-    existingConf = open("aletheia.h", "wt")  # This should completely write over the file
+    existingConf = open("aletheia.conf", "wt")  # This should completely write over the file
 
-
-existingConf.write('#pragma once\n#include <vector>\n#include <string>\n\nstd::vector<std::string> patterns = {\n')  # Type
-
-currentItem = []
-
+# write to the file in a CSV style format: 'Type, Head, Foot\n'; Where Head and Foot store the Hex Values
 for x in range(len(patternTypes)):
-    existingConf.write(" { ")  # Filler
-
-    currentItem = patterns[x*2].split('\\x')  # Head
-
-    print(currentItem)
-
-    existingConf.write("%i" % int(currentItem[1], 16))
-    for item in currentItem[2:]:
-        existingConf.write(", %i" % int(item, 16))
-
-    existingConf.write(" }, { ")  # Filler
-
-    print(currentItem)
-
-    currentItem = patterns[x*2+1].split('\\x')  # Foot
-    existingConf.write("%i" % int(currentItem[1], 16))
-    for item in currentItem[2:]:
-        existingConf.write(", %i" % int(item, 16))
-
-    existingConf.write(" },\t//%s\n" % patternTypes[x])  # Type
+    existingConf.write(patternTypes[x])  # Type
+    existingConf.write(", %s" % patterns[x*2])  # Head
+    existingConf.write(", %s\n" % patterns[(x*2)+1])  # Foot
