@@ -19,6 +19,9 @@
 
 #endif
 
+#define ustring std::basic_string<unsigned char>
+#define uchar unsigned char
+
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_ptr.h>
@@ -31,7 +34,6 @@ using thrust::device_ptr;
 using thrust::device_pointer_cast;
 
 using std::vector;
-using std::string;
 using std::thread;
 using std::pair;
 
@@ -40,8 +42,21 @@ using std::pair;
 // This could be changed to 257 to allow for wildcards after setup to allow for this
 #define rowSize (int)256
 
+std::ostream& operator << (std::ostream& os, const std::basic_string<unsigned char>& str) {
+	for (auto ch : str)
+		os << static_cast<char>(ch);
+	return os;
+}
+
+std::ostream& operator < (std::ostream& os, const std::basic_string<unsigned char>& str) {
+	for (auto ch : str)
+		os << static_cast<char>(ch);
+	return os;
+};
+
+
 // Setup //
-host_vector<tablePointerType> pfacLookupCreate(vector<string>& patterns)
+host_vector<tablePointerType> pfacLookupCreate(vector<ustring>& patterns)
 {
 	/*
 	The PFAC table can be described as:
@@ -57,10 +72,10 @@ host_vector<tablePointerType> pfacLookupCreate(vector<string>& patterns)
 		exit(4);
 	}
 
-	//sort the string list provided first by size then by character
+	//sort the string list provided first by size then by character -- This was modified slightly to work with ustring
 	// https://stackoverflow.com/questions/45865239/how-do-i-sort-string-of-arrays-based-on-length-then-alphabetic-order
 	sort(patterns.begin(), patterns.end(),
-		[](const std::string& lhs, const std::string& rhs) {
+		[](const ustring& lhs, const ustring& rhs) {
 		return lhs.size() == rhs.size() ?
 			lhs < rhs : lhs.size() < rhs.size(); });
 
@@ -108,7 +123,7 @@ host_vector<tablePointerType> pfacLookupCreate(vector<string>& patterns)
 }
 
 // Execution //
-__global__ void pfacSearch(unsigned int* needleFound, bool* results, char* haystack, unsigned long int haysize, tablePointerType startingRow, device_ptr<tablePointerType> pfacMatching)
+__global__ void pfacSearch(unsigned int* needleFound, bool* results, uchar* haystack, unsigned long int haysize, tablePointerType startingRow, device_ptr<tablePointerType> pfacMatching)
 {
 	// Stride will be worked out next
 	unsigned long int stride = blockDim.x * gridDim.x;
@@ -189,7 +204,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	
 
 	// Start GPU Mallocs //
-	char* cuda_haystack = 0; // Array of Char's containing chunks of haystack
+	uchar* cuda_haystack = 0; // Array of Char's containing chunks of haystack
 	bool* cuda_resultArray = 0; // Array of Boolean Values indicating found pattern
 
 	hayCountType* cuda_needlesFound = 0; // Single Unsigned int
@@ -220,7 +235,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		// Copy haystack into the GPU //
 		chunkManager.waitForRead(); // Make sure the chunk is read in
 
-		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, (chunkSize + chunkManager.getOverlay())* sizeof(char), cudaMemcpyHostToDevice);
+		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer, (chunkSize + chunkManager.getOverlay())* sizeof(uchar), cudaMemcpyHostToDevice);
 		if (cudaStatus != cudaSuccess) {
 			cerr << endl << "cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
 		}
@@ -232,7 +247,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		chunkManager.asyncReadNextChunk();
 		
 		// Run Search of current chunk on Device //
-		// Types										// u long				bool			 char[]			u long		tablePoint	thrust::device_ptr
+		// Types										// u long				bool			 uchar[]			u long		tablePoint	thrust::device_ptr
 		pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
 
 		// Check for any errors launching the kernel
@@ -298,13 +313,13 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 	if (chunkManager.remainder)
 	{
 		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer,
-			(chunkManager.remainder + chunkManager.getOverlay()) * sizeof(char),
+			(chunkManager.remainder + chunkManager.getOverlay()) * sizeof(uchar),
 			cudaMemcpyHostToDevice);
 	}
 	else
 	{
 		cudaStatus = cudaMemcpy(cuda_haystack, chunkManager.buffer,
-			(chunkSize + chunkManager.getOverlay()) * sizeof(char),
+			(chunkSize + chunkManager.getOverlay()) * sizeof(uchar),
 			cudaMemcpyHostToDevice);
 	}
 
@@ -372,10 +387,32 @@ Error:
 int main()
 {
 	// Generate the PFAC table on CPU before we start
-	vector<string> patterns = { "anything", "three", "that'll", "roderick", "wordly" };
+	//vector<ustring> patterns = { "anything", "three", "that'll", "roderick", "wordly" };
 
 	// 1109 patterns should be found with this test case
-	//vector<string> patterns = { "why" };
+	//vector<ustring> patterns = { "why" };
+
+	vector<ustring> patterns = {
+	{ 71, 73, 70, 56, 55, 97 }, { 0, 59 },	//gif
+	{ 71, 73, 70, 56, 57, 97 }, { 0, 0, 59 },	//gif
+	{ 255, 216, 255, 224, 0, 16 }, { 255, 217 },	//jpg
+	{ 80, 78, 71 }, { 255, 252, 253, 254 },	//png
+	{ 0, 0, 1, 186 }, { 0, 0, 1, 185 },	//mpg
+	{ 0, 0, 1, 179 }, { 0, 0, 1, 183 },	//mpg
+	{ 208, 207, 17, 224, 161, 177, 26, 225, 0, 0 }, { 208, 207, 17, 224, 161, 177, 26, 225, 0, 0 },	//doc
+	{ 60, 104, 116, 109, 108 }, { 60, 47, 104, 116, 109, 108, 62 },	//htm
+	{ 37, 80, 68, 70 }, { 37, 69, 79, 70, 13 },	//pdf
+	{ 37, 80, 68, 70 }, { 37, 69, 79, 70, 10 },	//pdf
+	{ 80, 75, 3, 4 }, { 60, 172 },	//zip
+	{ 79, 103, 103, 83, 0, 2 }, { 79, 103, 103, 83, 0, 2 }	//ogg
+	//{'t', 'e', 's', 't'} }; // This one still works for the wordlist testing
+	};
+	cout < patterns[14];
+	cout << endl;
+	cout < patterns[15];
+	cout << endl;
+	cout < patterns[16];
+
 
 	if (patterns.size() > (1 << 13))
 	{
@@ -387,7 +424,8 @@ int main()
 	vector<unsigned int> results;
 
 	// With the above patterns there is definetly 2191 patterns in this file
-	fileHandler chunkManager("200MBWordlist.test", chunkSize, patterns.back().size());
+	fileHandler chunkManager("sbd1.dd", chunkSize, patterns.back().size());
+	//fileHandler chunkManager("200MBWordlist.test", chunkSize, patterns.back().size());
 
 	tablePointerType startingRow = patterns.size() + 1;
 
