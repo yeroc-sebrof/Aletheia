@@ -19,9 +19,6 @@
 
 #endif
 
-#define ustring std::basic_string<unsigned char>
-#define uchar unsigned char
-
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_ptr.h>
@@ -37,16 +34,12 @@ using std::vector;
 using std::thread;
 using std::pair;
 
-#define chunkSize (unsigned long int)60*MB
+#define chunkSize (unsigned long int)2*MB
 
 // This could be changed to 257 to allow for wildcards after setup to allow for this
 #define rowSize (int)256
 
-std::ostream& operator << (std::ostream& os, const std::basic_string<unsigned char>& str) {
-	for (auto ch : str)
-		os << static_cast<char>(ch);
-	return os;
-}
+#define blocks 32
 
 std::ostream& operator < (std::ostream& os, const std::basic_string<unsigned char>& str) {
 	for (auto ch : str)
@@ -248,7 +241,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 		
 		// Run Search of current chunk on Device //
 		// Types										// u long				bool			 uchar[]			u long		tablePoint	thrust::device_ptr
-		pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
+		pfacSearch <<< blocks, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack, chunkSize, startingRow, device_pointer_cast(&cuda_pfacTable[0]));
 
 		// Check for any errors launching the kernel
 		cudaStatus = cudaGetLastError();
@@ -332,7 +325,7 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 #endif // DEBUG
 
 	// Run Search of current chunk on Device //
-	pfacSearch <<< 32, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack,
+	pfacSearch <<< blocks, prop.maxThreadsPerBlock >>> (cuda_needlesFound, cuda_resultArray, cuda_haystack,
 		chunkManager.remainder ? chunkManager.remainder : chunkSize,
 		startingRow, device_pointer_cast(&cuda_pfacTable[0]));
 
@@ -407,26 +400,29 @@ int main()
 	{ 79, 103, 103, 83, 0, 2 }, { 79, 103, 103, 83, 0, 2 }	//ogg
 	//{'t', 'e', 's', 't'} }; // This one still works for the wordlist testing
 	};
-	cout < patterns[14];
-	cout << endl;
-	cout < patterns[15];
-	cout << endl;
-	cout < patterns[16];
+	
+	// Test to see if the patterns were still valid using the patterns that fit in the ASCII namespace
+	//cout < patterns[14];
+	//cout << endl;
+	//cout < patterns[15];
+	//cout << endl;
+	//cout < patterns[16];
 
 
 	if (patterns.size() > (1 << 13))
 	{
-		cerr << endl << endl << "There was an issue regarding the number of patterns" << endl << "The implementation may not be able to function correctly with this. tablePointerType may require being increased. If this error has arose then hardware should have advanced to also be able to handle it";
+		cerr << endl << endl
+			<< "There was an issue regarding the number of patterns" << endl
+			<< "The implementation may not be able to function correctly with this. tablePointerType may require being increased." << endl
+			<< " If this error has arose then hardware should have advanced to also be able to handle it";
 		exit(1);
 	}
 
 	host_vector<tablePointerType> pfacMatching = pfacLookupCreate(patterns);
 	vector<unsigned int> results;
 
-	// With the above patterns there is definetly 2191 patterns in this file
-	fileHandler chunkManager("sbd1.dd", chunkSize, patterns.back().size());
-	//fileHandler chunkManager("200MBWordlist.test", chunkSize, patterns.back().size());
-
+	fileHandler chunkManager("Files/Example.png", chunkSize, patterns.back().size());
+	//fileHandler chunkManager("sbd1.dd", chunkSize, patterns.back().size());
 	tablePointerType startingRow = patterns.size() + 1;
 
 	// CUDA Manager device manager
@@ -434,7 +430,7 @@ int main()
 
 	if (results.size())
 	{
-		cout << endl << results.size() << " Patterns Found";
+		cout << endl << results.size() << " Pattern(s) Found" << endl;
 		//for (int i = 0; i < results.size(); ++i)
 		//{
 		//	cout << endl << "Found Patterns in chunk " << results[i].first << endl;
@@ -442,14 +438,18 @@ int main()
 				//cout << results[i].second[j] << " ";
 		//}
 
-		//for (int j = 0; j < results.size(); ++j)
-		//	cout << results[j] << " ";
-
+		for (int j = 0; j < results.size(); ++j)
+			cout << results[j] << " ";
 	}
 	else
 	{
 		printf("\nNo Matches");
 	}
+
+	// Test case showed that remainder doesn't work as intended when you consider file chunks bigger than the file itself
+	//ustring test = chunkManager.buffer;
+	//cout < test.substr(0, 140);
+	//cout << endl << chunkManager.remainder;
 
 	return 0;
 }
