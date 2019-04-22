@@ -8,16 +8,11 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#endif
+
 // using size_t is too inconsistent between OS
 #define tablePointerType uint16_t
 #define hayCountType unsigned int
-
-#elif // _WIN32
-
-// fix this to have a different unix compat type
-#define tablePointerType uint16_t
-
-#endif
 
 #include <thrust/device_vector.h>
 #include <thrust/host_vector.h>
@@ -183,24 +178,26 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 
 	device_vector<tablePointerType> cuda_pfacTable;  // Vector that GPU can access -- Thrust Lib
 
-	// Choosing the First GPU to run on. Multiple GPU's is out of scope/future work
-	cudaStatus = cudaSetDevice(0); // Further choice behind which GPU should also be implemented for the user
-	if (cudaStatus != cudaSuccess) {
-		cerr << endl << "cudaSetDevice failed! CUDA capable hardware is required for this process?" << endl;  goto Error;
-	}
-
-	// Querying the device for properties
-	cudaStatus = cudaGetDeviceProperties(&prop, 0);
-	if (cudaStatus != cudaSuccess) {
-		cerr << endl << "GetDeviceProperties failed!" << endl;  goto Error;
-	}
-	
-
 	// Start GPU Mallocs //
 	uchar* cuda_haystack = 0; // Array of Char's containing chunks of haystack
 	bool* cuda_resultArray = 0; // Array of Boolean Values indicating found pattern
 
 	hayCountType* cuda_needlesFound = 0; // Single Unsigned int
+	
+	// Choosing the First GPU to run on. Multiple GPU's is out of scope/future work
+	cudaStatus = cudaSetDevice(0); // Further choice behind which GPU should also be implemented for the user
+	if (cudaStatus != cudaSuccess) {
+		cerr << endl << "cudaSetDevice failed! CUDA capable hardware is required for this process?" << endl;
+		goto Error;
+	}
+
+	// Querying the device for properties
+	cudaStatus = cudaGetDeviceProperties(&prop, 0);
+	if (cudaStatus != cudaSuccess) {
+		cerr << endl << "GetDeviceProperties failed!" << endl;
+		goto Error;
+	}
+	
 
 	// Copy of the PFAC table
 	cuda_pfacTable = pfacTable; // Populating GPU Vector
