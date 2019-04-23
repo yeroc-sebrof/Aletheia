@@ -1,5 +1,6 @@
 #include "../../fileChunkingClass/fileHandler.h"
 
+#include <chrono>
 #include <algorithm>
 
 // define the types between unix and windows
@@ -29,7 +30,10 @@ using std::vector;
 using std::thread;
 using std::pair;
 
-#define chunkSize (unsigned long int)2*MB
+// Timings
+using namespace std::chrono;
+
+#define chunkSize (unsigned long int)200*MB
 
 // This could be changed to 257 to allow for wildcards after setup to allow for this
 #define rowSize (int)256
@@ -230,10 +234,6 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 			cerr << endl << "cudaMemcpy of chunkManager.buffer to device failed!" << endl;  goto Error;
 		}
 
-#if DEBUG
-		cout << endl << chunkManager.getCurrChunkNo() + 1 << " Complete of " << chunkManager.getTotalChunks() << endl;
-#endif // DEBUG
-
 		chunkManager.asyncReadNextChunk();
 		
 		// Run Search of current chunk on Device //
@@ -262,11 +262,11 @@ cudaError_t cudaManager(fileHandler& chunkManager, host_vector<tablePointerType>
 
 		if (needlesFound == 0)
 		{
-			cout << endl << "There were no Needles found in chunk " << chunkManager.getCurrChunkNo()-1;
+			cout << "There were no Needles found in chunk " << chunkManager.getCurrChunkNo()-1 << endl << endl;
 		}
 		else
 		{
-			cout << endl << "Needles in chunk " << chunkManager.getCurrChunkNo()-1 << " found equals " << needlesFound << endl;
+			cout << "Needles in chunk " << chunkManager.getCurrChunkNo()-1 << " found equals " << needlesFound << endl << endl;
 			
 
 			if (processResults.joinable())
@@ -374,8 +374,10 @@ Error:
 	return cudaStatus;
 };
 
-int main()
+int main(int argc, char *argv[])
 {
+	steady_clock::time_point t0 = std::chrono::steady_clock::now();
+
 	// Generate the PFAC table on CPU before we start
 	//vector<ustring> patterns = { "anything", "three", "that'll", "roderick", "wordly" };
 
@@ -418,12 +420,25 @@ int main()
 	host_vector<tablePointerType> pfacMatching = pfacLookupCreate(patterns);
 	vector<unsigned int> results;
 
-	fileHandler chunkManager("Files/Example.png", chunkSize, patterns.back().size());
+	steady_clock::time_point t1 = std::chrono::steady_clock::now();
+
+	fileHandler chunkManager(argv[1], chunkSize, patterns.back().size());
+	
+	//fileHandler chunkManager("S:\\TestBout2\\eachType\\testhtml.dd", chunkSize, patterns.back().size());
 	//fileHandler chunkManager("sbd1.dd", chunkSize, patterns.back().size());
 	tablePointerType startingRow = patterns.size() + 1;
 
+	chunkManager.waitForRead();
+
+	//uchar htmlCloseTagTest[20];
+	//memcpy(htmlCloseTagTest, &chunkManager.buffer[83452], 20);
+	//cout < htmlCloseTagTest;
+	//cout << endl << endl;
+
 	// CUDA Manager device manager
 	cudaManager(chunkManager, pfacMatching, startingRow, results);
+
+	steady_clock::time_point t2 = std::chrono::steady_clock::now();
 
 	if (results.size())
 	{
@@ -447,6 +462,12 @@ int main()
 	//ustring test = chunkManager.buffer;
 	//cout < test.substr(0, 140);
 	//cout << endl << chunkManager.remainder;
+
+	auto PFACGEN = duration_cast<microseconds> (t1 - t0).count();
+	auto PFACSEARCH = duration_cast<milliseconds> (t2 - t1).count();
+
+	cout << endl << endl << "Time for PFAC Table: " << PFACGEN << "ns" << endl;
+	cout << "Time for search: " << PFACSEARCH << "ms" << endl;
 
 	return 0;
 }
