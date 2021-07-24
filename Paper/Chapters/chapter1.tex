@@ -1,0 +1,121 @@
+%- Set the scene
+%- Background to and purpose of the investigation
+%- Scope
+%- Include project aims/research question
+%- Likely to be more focused than in your proposal
+%- End with Overview of Remaining Chapters
+%- Don’t write this first.  Wait to you know the whole story of your project
+%- Guide - (750-1000 words) -- Currently 1836
+
+\chapter{Introduction}
+\label{chap:chapter1}
+In Digital Forensics and Incident Response, the process of file carving can be of paramount importance for the discovery of deleted and/or obfuscated files.
+File Carving being the process of searching for files on a hard-disk by searching through the contents of the disk as you would a string for headers and footers.
+It is often found that, due to lack of knowledge, many users will not go the extra step to ensure the files they `delete' from their computers are in fact deleted as they expect; instead these files are being dereferenced by the file system.
+Although the search for these files is simple in theory, given file types’ use of headers and footers, the execution can take some time due to the volume.
+Using the needle in a haystack analogy, the one ever growing complication during this process lies with the Haystack and not the Needles.
+Consumer Hard drives have only been able to hold 1TB since 2007 when Hitatchi first announced their consumer grade Internal Hard Disk Drive at the Consumer Electronics Show (CES).
+Now, at the time of writing, it can be considered standard for mid-range laptops and desktops to be released with 1 \acs{TB} Hard Disks.
+Despite this vast amount of storage users are provided with they still regularly manage to fill these drives with files -- especially from social media sites and general search engine browsing which is temporarily cached -- thus, increasing the potential evidence that could be discovered.
+Furthermore, due to consumers ever persistent push for more and more backing storage on their personal devices, when said devices are involved in digital crime, the time taken to gather evidence is increasing alongside it.
+Currently there is an extreme Digital Forensic backlog, \textit{``many [Digital Forensic laboratories] have backlogs of 6 months to 1 year''} (E. Casey, M. Ferraro, and L. Nguyen, 2009).
+
+% Digital Forensics Backlog
+% 	Growning number of devices per investigation
+% 	Growing volume
+% 	Up to 18 months of backlogs in UK -- ASK FOR SOURCE
+
+% 	Storage Media Bottleneck
+% 		Read speeds are crap on HDD's
+% 		8.3hrs to read 4TB drive @ 133MB/s
+The process of taking in a suspect’s Hard Disk, making a forensic copy and then scanning said copy for deleted files may never be fast enough but methods exist to speed this up.
+These methods will be covered and the option of using GPGPU technology will be expanded as the focus of this paper.
+\newpage
+\section{Background}
+To understand the problem of retrieving files from users storage devices File Systems must be briefly described.
+With \acp{OS}, users' files are stored in a hierarchy of named folders that are all there to ease the users' search and provide a semblance of order.
+Meanwhile, the \ac{OS} also handles communication to the physical storage via the file-system for the practical storage of files.
+The file-system stores meta-data relating to the physical location of the files on the disk.
+When a file is deleted the meta-data is completely written over, so the system can consider these chunks of storage to be free; thusly the pointers are unable to be recovered in order to regain the files this way.
+
+
+{\centering
+\textit{``While a filesystem’s metadata is fragile, file data is much more resilient.''} (Marziale, Richard and Roussev, 2007).\par
+}
+
+Since the file remains on the storage medium, unless the \ac{OS} stores a file in its place, these dereferenced files can still be discovered via File Carving.
+File Headers are a short string which identify the file type.
+These headers can be up to 21 Bytes and are able to be uniquely identified, in most circumstances, via the process of file carving.
+With Linux \ac{OS}, file types are guessed by the \ac{OS} via their File Headers and only in certain circumstances will the \ac{OS} make use of file extensions (Archive files such as .tar.bz are one example).
+While in Windows, file types are known to the \ac{OS} only by the file extension at the end of the file (e.g. foo.exe, bar.ini, foo.jpg) and the header footer pairs are left alone.
+Some examples of file types that have accompanying file headers are: Java class files which start with \texttt{CA FE BA BE} and PDF files can start with \texttt{25 50 44 46}.
+Furthermore, files that make use of such headers also exist with a corresponding Footer; PDF files can end with \texttt{0A 25 25 45 4F 46}.
+As these header/footer strings correspond to file types, they are unique enough they can be searched for in the file system and this is an integral part of the File Carving process.
+
+Once searching has found both the header and footer the reconstruction of the found files is possible by cloning the header, footer and contents from the suspect drive into a new file.
+There are many issues that can be encountered with the carving of files based on just the header and footer positions.
+Complex file types such as Intertwined JPEG, Fragmented files and compressed PNG’s can provide many such examples.
+There exist many papers that further delve into each of these problems individually which would be better suited to explain such issues in depth\footnotemark but it is not the place of this paper to go into them.
+\footnotetext{Measuring and Improving the Quality of File Carving Methods, S.J.J. Kloet, 2008}
+
+Apart from the file quality after the carving process, when it comes to use cases of these tools a big factor to their usefulness is also time; especially when these tools are being used by law enforcement agencies.
+In Digital Forensics, access to user-files can be time limited and important pieces of evidence needed on a suspect's backing storage can be the difference in proving guilt or innocence.
+As such these tools must perform not only up to standard but at high speed.
+On initial inspection of the problem it could be expected that any issues encountered with fast execution would be with the backing storage mediums, specifically use of slow storage devices.
+This problem has in fact already been resolved through disk RAID and the improvements in \ac{SSD} technology as read times have vastly risen into the possibilities of 1\ac{GB}/s at reasonable cost.
+As such the issue has now shifted to ensuring the string searching algorithms in the back end of the file carving software are able to keep processing the data at the rate it is now being provided without itself becoming the delay.
+
+In the case of current open-source tools, Foremost and Scalpel, they lack the ability to keep up with the read times of modern \ac{SSD} technology; this can be seen in testing these tools (Bayne, 2017, Page 55) (Laurenson, 2013).
+In their current form the mentioned tools make use of the \acf{BM} searching algorithm.
+As this searching algorithm is best suited for looking for individual strings it must make multiple passes on the data being searched to look for each pattern; resulting in inefficiency.
+This algorithm has required replacement for some time.
+
+Furthermore, for these tools the searching of strings is typically restricted to the \ac{CPU}.
+Even with the benefit of fast access time to main memory and high speed compute cores for searching through the data quickly, these tools do not utilise the necessary resources.
+Multi-threading of these searches is also required for improvement of processing speeds.
+Until this is done \ac{CPU} searching in a digital forensics environment will not be fast enough to meet the maximum speeds of backing storage.
+
+\section{Methods of improvement}
+Although improvement to their string searches for file headers and footers could only go so far, algorithms that are suited for both Multi-threading and Multi-string searching would be required.
+The algorithm to choose would depend upon what method of improvement is chosen.
+The two methods that could be chose between to solve this problem are Distributed Computing and \acl{GPGPU}s.
+
+\subsection*{Distributed Computing}
+Distributed Computing requires the use of multiple systems running in unison to search through the contents of a disk image, said disk image must also be appropriately shared between each host.
+The distinction of appropriately sharing the disk between these systems is itself a challenge that requires addressing.
+In the event a cluster of computers was to be built with file carving as its focus it could work at considerable speed.
+This would be very resource intensive to build and maintain from the ground up but some researchers have discussed making use of existing office computers -- as per one example -- to host this process.
+Resources considered for this development include; the time taken for setup/maintenance, power costs, and initial hardware costs (including networking equipment).
+Once such a system is operational it could then be scaled with relative ease via the introduction of new worker nodes and changing configuration files on master nodes.
+This would be easier to maintain with infrastructure management frameworks\footnote{Examples of note include: Ansible, Chef, Puppet}.
+
+It can also be argued that this method could be developed to function in the cloud.
+Although this is possible it must also be considered that for government bodies such as Nationalised Police units or similar organisations confidentiality and chain of evidence would make working with such companies near impossible.
+Due all the management and complications that would go along with this method it is of the researcher’s opinion the next option is not only more convenient but more fit for purpose.
+
+\subsection*{\acfp{GPGPU}}
+In making use of modern \acp{GPU} that are fit for General Purpose computing, the string searching can be managed on one host running through thousands of cores of processing on their \ac{GPU}.
+In following this method, one system to perform these searches would have a far higher initial cost compared to the cost behind each of the many hosts in the Distributed computing method;
+the clear upside is this would only be paid for a single host.
+Once Initial costs have been met, as it is a single device, the running costs as well as the time required for setup or maintenance would be significantly lower when compared to the aforementioned distributed computing method
+Also, when comparing between the two systems regarding the cost involved in a complete overhaul of the system, the re-purchasing of this specialised hardware would turn out cheaper in most cases.
+\newpage
+\section{Scope of Research}
+The scope of this paper was based around the research question: \textit{How much improvement can be made on forensics file carving speeds using \acs{GPGPU} methods}?
+To successfully answer this question the research aim was to measure achievable performance gain while making use of \acs{GPGPU} methods and modern algorithms in a proof of concept file carving program.
+
+This aim was split into three objectives:
+\begin{enumerate}[noitemsep, topsep=0pt]
+  \item Locate and read through research of successful methods of improving performance with string searches for GPU
+  \item Implement different methods to perform string searches on disks and memory
+  \item Compare between all the implementations in multiple key areas.
+\end{enumerate}
+
+Overall, the scope of the project was left open enough for interpretation that major changes would not be required during project execution.
+
+It was decided the best way to execute the research would be to focus on the creation a File Carving solution using C++ and a \ac{GPGPU} library.
+In practice the \ac{GPGPU} library that the researcher made use of was the CUDA library; CUDA provides simplicity it provided compared to the option of OpenCL which had too high a learning curve.
+
+To compare the file carving program that was being developed the researcher stuck with existing open-source file carving solutions.
+Although the researcher was of the opinion that the comparison could be considered unfair it was necessary due to -- at this time -- the researchers lack of options regarding GPGPU file carving solutions within the freeware/open-source sphere.
+The file carving solutions that were tested against can be seen in the Method section.

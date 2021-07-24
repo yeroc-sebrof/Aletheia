@@ -1,0 +1,139 @@
+%Chapter 5 - Discussion
+
+
+%- Guide (1000-1500 Words)
+
+\chapter{Discussion}
+\label{chap:chapter5}
+
+\section{Research Questions and Objectives}
+The Research Question that fuelled this investigation was: `How much improvement can be made to the forensics file carving process using \ac{GPGPU} methods?'.
+The Aim of this was to measure any achievable performance gain using both \ac{GPGPU} methods and modern algorithms for file carving.
+It was also important to recognise any downfalls that come with using this process.
+
+It is the researchers belief that, in looking back, the objectives that were set forth were met.
+Said objective include:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item Locate and digest material from research of successful methods of improving performance with string searches for \ac{GPU}
+    \item Implementing discovered methods to perform string searches on disks and memory
+    \item Comparing all of the implementations in the above step with verbose testing
+\end{itemize}
+
+\subsection{Staged Development \ac{GPGPU}}
+Through the course of the software development cycle, and following with the \ac{RAD} methodology, prototypes were created that gradually progressed the PFAC Algorithm to it's final iteration.
+Each of these steps were also kept to integrate with the fileChunkingClass for comparison as can be seen in Section \ref{sec:PFACResults}.
+
+This went through 4 main stages:
+\begin{itemize}[noitemsep, topsep=0pt]
+    \item PFAC compilation for a Single CPU core
+    \item Having PFAC run across Multiple CPU cores in parrallel
+    \item Getting PFAC to integrate with the CUDA types
+    \item and successfully running PFAC accross the GPU
+\end{itemize}
+
+Moreover, throughout the development it was important to, where possible, optimise this process.
+As the existing methods that exist would have been subject to multiple rounds of optimisation having a completely optimised final product would have paled the potential gains that could be obtained.
+\newpage
+\subsection{Unexpected Changes and Refinements}
+Changes to the original scope were made in order to add focus to the research question during development.
+The scope originally encompassed the idea that a full file carving program could be made in OpenCL.
+This would have been optimal due to the -- previously discussed -- accessibility of OpenCL and to more clearly compare existing tools to the final product.
+
+Through development it was made clear that the proposed scope would have been impossible within the allotted time to this research.
+Many of the elements that would have allowed for this project to become a fully functioning file carver were left to future work.
+Furthermore, research into the optimal methods to file carve each file type could have encompassed a dissertation within itself.
+
+\section{Evaluation of Results}
+\subsection{Individual File Type Test}
+File types were searched for in this section individually to measure false positives and discover if each file would be found by the file search as intended.
+The results contained in Section \ref{sec:fileTypeTest} and Appendix \ref{sec:fileTypeTestApp} show that the false positives existed but also showed that false negatives also were occurring.
+The developer expected false positives at this time as the file carving element was not there to confirm the legitimacy of each result.
+False negatives however were a big issue that should not of been occurring and were investigated.\\
+
+\subsubsection*{False Negatives}
+\label{subsec:fileTypeDiscussion}
+As the HTML file footer was unable to be found and was simple enough to explore the researcher debugged the issue.
+The \href{https://github.com/yeroc-sebrof/fileChunkingClass}{fileChunkingClass} was believed to be in error as characters were being fetched from the disk imaged incorrectly.
+The hypothesis that the researcher came to is that the \texttt{\textbackslash} character was somehow escaping part of the unsigned character that was meant to be \texttt{h}.
+Thus resulting in new required pattern to find the footer:
+
+{\centering
+\texttt{\{`<',{\textbackslash}x5,{\textbackslash}x0,`t',`m',`l',`>'\}}.
+\par}
+
+The result seen from using this new pattern can be seen in Appendix \ref{subsec:fileTypeHTML}.
+This new HTML footer was not used in any other section for fairness when comparing later to other tools.
+
+It was assumed from this that the false negatives from the other file types were due to similar circumstances.
+As file carving was not to take place however, this was deemed an acceptable failure within the fileChunkingClass that would need to be resolved before expansion could be made into a file carving tool but for this purpose was acceptable.
+The most important result from this testing is the data throughput and even though the false negatives could skew the final results this would be negligible in the researchers opinion.
+
+\subsection{Full File Type Test}
+Testing of all of the file types that were in use was performed against one file system of size 400MB.
+Two tests were performed two different sets of patterns to search for; one set of patterns being a subsection of the other.
+The final listing of file patterns used can be seen in Figures \ref{fig:runOnePatts} and \ref{fig:runTwoPatts}
+This test both determined if false positives were continuing and how difference could be measured in time taken between different quantities of patterns.
+
+As you can see in Figures \ref{fig:runOneResults} and \ref{fig:runTwoResults} the speeds differed, on average, by 32.46ms in the favour of the PFAC Table that contained all of the patterns.
+This result was unexpected but due to the test being repeated 50x to achieve these were certainly the average speeds, these results can be seen in Table \ref{tab:WindowsTestingSumm400MB}.
+
+This test did go on to prove that there is false positives for files that do not exist in this disk image but again this was expected;
+it would be the job of a file carver to gain clarity though these false positives.
+
+\subsection{2 \acl{GB} file with 10 PDFs}
+\label{sec:400MBand2GBtookSimilarTimes}
+This test was performed to collect more information regarding run speeds of the tool.
+The consistent use of only PDF was to give the researcher a firm grasp as to how many files header/footers should have been discovered.
+Tests were ran 50 time to confirm their validity with three different patterns loaded to compare.
+Furthermore a comparison could be made between the 400\ac{MB} Test Two Patterns seen in Figure \ref{fig:runTwoResults} of Sub-Appendix \ref{sec:400MBAppendixPatterns} to better understand how the algorithm scales.
+
+\subsection{Linux comparisons}
+Finally for inter tool testing, the Linux version of the tool was tested using all of the available test images from Windows testing.
+Linux was also able to generate a 4th test image of 10GB that was once again filled with PDFs that were randomly distributed throughout.
+This all can be seen in Appendix \ref{sec:linuxTesting}.
+
+The testing for this section was moved into a RAM disk.
+This meant that instead of loading the files from a hard disk they were already in main memory.
+A comparison to loading the files for the \ac{SSD} has been made as well within Sub-Appendix \ref{sec:aletheiaRamDisk}.
+
+The results, as seen in Section \ref{sec:linuxResults} show that the Aletheia tool runs
+\newpage
+\section{Comparison to Existing Tools} % What can they do better? are they trash? does it not work on the platforms or in the scale i want?
+\label{sec:existingTools}
+
+\subsection{OpenForensics}
+\label{sec:OpenForensicsDiscussion}
+OpenForensics was developed alongside the aforementioned paper ``Accelerating Digital Forensic searching through \ac{GPGPU} Parallel Processing Techniques'' (Bayne, 2017).
+This tool, using OpenCL, can make use of \ac{GPGPU} and \ac{CPU} assets simultaneously which was seen during the testing stage along with just \ac{GPU}.
+Furthermore, for the purpose of fair testing this tool is also able to search for individual file types so testing was performed with both: PDF only and All types.
+
+As seen in Section \ref{sec:OpenForensicsComparison} OpenForensics, clearly due to it more established and tested status, runs better than the Aletheia platform.
+In itself this further proves the research question by showing how much improvement there stands to be gained against existing file carving tools.
+
+\subsection{Foremost \& Scalpel}
+As it can be seen from the results in Section \ref{sec:ForemostScalpelRes} Foremost was difficult to test due to the interesting results that were accumulated.
+Testing the tool once before restarting the \ac{AWS} instance resolved this issue to increase the accuracy of results.
+However this greatly increased the time taken to collect results so less total results could be added to fortify the average run time in Appendix \ref{sec:SNFappendix}.
+
+It was interesting how pronounced the time differences imposed by \acl{BM} became when making use of only one pattern as a comparison to all patterns.
+But due to the fact the search would need to be performed again for each pattern, this was unsurpirsing.
+
+In comparing the Aletheia platform to these established tools the speed difference in the favour of Aletheia was gratifying.
+This also solidified the answer to the research question -- ``How much improvement can be made to the forensics file carving process using \ac{GPGPU} methods?'' -- and quantified it via the test cases to up to a factor of 15x (When comparing Table \ref{tab:AverageScalpelAllPatt} to \ref{tab:UbuntuTestingSumm2GBRAM} with the All patterns for the 2GB file).
+\newpage
+\section{How existing tools can be improved using \ac{GPGPU} acceleration}
+Using both the speeds that were accumulated from OpenForensics and Aletheia it is clear that improvements can be made on the Foremost and Scalpel platforms.
+The OpenForensics platform even shows that through the correct use of resource management on the \ac{CPU} can be vastly improved and search times, in comparison to single threaded tools, can be multiplied by at least the sum of the concurrent cores.
+With the new generations of hardware that are being released core counts are being greatly increased\footnotemark and processing speed on CPU could go with it.
+\footnotetext{AMD Ryzen Threadripper 2990WX Processor, 32 Cores\\ \href{https://www.amd.com/en/products/cpu/amd-ryzen-threadripper-2990wx}{https://www.amd.com/en/products/cpu/amd-ryzen-threadripper-2990wx}}
+Although the idea of having thousands of GPU cores outperformed does not seem possible, the time saved on the memory copies could see this as possible with enough threads of execution.
+
+From the implementation of the Aletheia platform the multiple buffers that exist on the \ac{CPU} and the \ac{GPU} having their own memory spaces has both pros and cons.
+Being able to synchronously load in a chunk to one buffer while reading another was a useful design.
+This could be easily replicated on \ac{CPU} devices, it also does not need to be limited to simply 2 buffers.
+The idea of having multiple buffers could come in use to carve during the searching through file chunks, but this potential method would have its limits.
+
+Even if none of the previous recommendations are implemented, by phasing out the use of \acf{BM} for file searching great boosts can be seen in performance.
+\ac{BM} in it's ability to only read for a single pattern at a time is far out-shined in performance compared to the \acf{AC} algorithm.
+As \ac{AC} is able to search for multiple patterns simultaneously the need for multiple search passes is completely removed.
+This one change in itself could save considerable time in execution.

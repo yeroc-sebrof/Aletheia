@@ -1,0 +1,187 @@
+\documentclass[12pt]{dissertation} 
+
+%load any additional packages
+\usepackage[utf8]{inputenc} % Lets me include the reference to Škrbina N
+\usepackage[bmargin=1.5in, margin=1.2in]{geometry}
+\setlength{\footskip}{50pt}
+\usepackage{amssymb}
+\usepackage{natbib}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage{titlesec}
+\usepackage[]{algorithm2e}
+\usepackage{amsmath,amsfonts,amssymb,amsthm,bm}
+\usepackage{caption}
+\usepackage{wrapfig}
+\usepackage{fancyvrb}
+\usepackage{subcaption}
+\usepackage{tikzscale}
+\usepackage{multicol}
+\usepackage[capitalise]{cleveref}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{hhline}
+\usepackage{titlesec}
+\usepackage{enumitem}
+%\usepackage[printonlyused]{acronym}
+\usepackage{acronym} % To confirm formatting
+\usepackage{indentfirst}
+\usepackage{varioref}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{times}
+\usepackage[titletoc,toc,title,page]{appendix}
+
+\titlespacing\section{0pt}{0pt plus 2pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsection{0pt}{0pt plus 2pt minus 2pt}{0pt plus 2pt minus 2pt}
+\titlespacing\subsubsection{0pt}{0pt plus 2pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+
+\definecolor{blue}{RGB}{38,139,210}
+\definecolor{cyan}{RGB}{42,161,152}
+\definecolor{green}{RGB}{0,102,0}
+\definecolor{violet}{RGB}{108,113,196}
+\definecolor{white}{RGB}{255,255,255}
+\definecolor{yellow}{RGB}{244,229,66}
+\definecolor{red}{RGB}{220,50,47}
+\definecolor{base01}{RGB}{88,110,117}
+\definecolor{base02}{RGB}{7,54,66}
+\definecolor{base03}{RGB}{0,43,54}
+
+\newcommand*{\vertbar}{\rule[-1ex]{0.5pt}{2.5ex}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\doublenewline}{\newline\newline}
+
+\titleformat{\chapter}[hang]
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter:}{5pt}{\Huge}
+\titlespacing*{\chapter}{0pt}{0pt}{5pt}
+
+\title{An investigation of file carving techniques using GPGPU architecture} 
+
+\author{Corey Forbes}                       %your name
+\college{School of Design and Infomatics}   %your college
+
+%\renewcommand{\submittedtext}{change the default text here if needed}
+\degree{Bachelor of Science with Honours\\in\\Ethical Hacking}     %the degree
+\degreedate{\small \textit{\today}}         %the degree date
+
+%end the preamble and start the document
+\begin{document}
+% Define all the acronyms
+\acrodef{MB}{Megabyte(s)}
+\acrodef{GB}{Gigabyte(s)}
+\acrodef{TB}{Terabyte(s)}
+\acrodef{HDD}{Hard Drive Disk}
+\acrodef{SSD}{Solid State Drive}
+\acrodef{OS}{Operating System}
+\acrodef{AC}{Aho-Corasick}
+\acrodef{BM}{Boyer-Moore}
+\acrodef{PFAC}{Parrallel Failureless Aho-Corasick}
+\acrodef{RAD}{Rapid Application Development}
+\acrodef{CPU}{Central Processing Unit}
+\acrodef{GPU}{Graphical Processing Unit}
+\acrodefplural{GPU}{Graphical Processing Unit}
+\acrodef{IGP}{Intergrated Grahpical Processor}
+\acrodef{GPGPU}{General Purpose Graphical Processing Unit}
+\acrodef{IDS}{Intrusion Detection System}
+\acrodef{API}{Application Programming Interface}
+\acrodef{AWS}{Amazon Web Services}
+%this baselineskip gives sufficient line spacing for an examiner to easily markup the thesis with comments
+\baselineskip=16pt plus1pt
+
+%set the number of sectioning levels that get number and appear in the contents
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+
+\maketitle                  % create a title page from the preamble info
+\include{dedication}        % include a dedication.tex file
+\include{acknowledgements}  % include an acknowledgements.tex file
+\include{Chapters/abstract}          % include the abstract
+
+\begin{romanpages}          % start roman page numbering
+\tableofcontents            % generate and include a table of contents
+\listoffigures              % generate and include a list of figures
+\begingroup
+\let\clearpage\relax
+\newpage
+\listoftables
+\endgroup
+\end{romanpages}            % end roman page numbering
+
+\setlength{\parindent}{0em} % Sets the indentation for the new paragraph line
+\setlength{\parskip}{1em}
+
+%now include the files of latex for each of the chapters etc
+\include{Chapters/chapter1} % 1836 words
+\include{Chapters/chapter2} % 1968 words
+\include{Chapters/chapter3} % 1143 words
+\include{Chapters/chapter4} % 
+\include{Chapters/chapter5} % 
+
+\include{Chapters/conclusion}
+% switch to two-column layout
+
+\begin{multicols}{2}
+{\small
+\section*{Acronyms}
+\subsubsection*{File Sizes:}
+\acf{MB}\\
+\acf{GB}\\
+\acf{TB}
+\subsubsection*{Hardware types:}
+\acf{HDD}\\
+\acf{SSD}\\
+\acf{CPU}\\
+\acf{GPU}\\
+\acf{GPGPU}\\
+\acf{IGP}
+\columnbreak
+\subsubsection*{Algorithms:}
+\acf{BM}\\
+\acf{AC}\\
+\acf{PFAC}
+\subsubsection*{Other:}
+\acf{RAD}\\
+\acf{IDS}\\
+\acf{OS}\\
+\acf{API}\\
+\acf{AWS}
+\par}
+\end{multicols}
+
+%now enable appendix numbering format and include any appendices
+\chapter{Appendicies}
+\renewcommand{\thesection}{\Alph{section}}
+\input{Appendices/appendixPFAC} % CPU Test - 400MB
+\newpage
+\include{Appendices/appendixFileTypeTest} % GPU tests of 64MB
+\include{Appendices/appendixAllFilesTest} % GPU test of 400MB
+\include{Appendices/appendix10PDF} % 2GB
+\include{Appendices/appendixOpenForensics} %2GB
+\include{Appendices/appendixOverhead}
+%\include{Appendices/appendixScalpelNForemost} % 400MBand 2GB
+
+\include{Appendices/appendixAllResults50x} % All others
+%\include{Appendices/appendixTestDiskCode}
+
+%uncomment next line to change bibliography name to references
+%\renewcommand{\bibname}{References}
+%\bibliography{bibliography} %use a bibtex bibliography file refs.bib
+%\bibliographystyle{agsm} %use the plain bibliography style
+\chapter*{References}
+Bayne, E. (2017) Accelerating digital forensic searching through GPGPU parallel processing techniques. Abertay University.
+
+Bellekens, X., Tachtatzis, C., Atkinson, R., Renfrew, C. and Kirkham, T. (2017) 'GLoP: Enabling Massively Parallel Incident Response Through GPU Log Processing', 2014-. doi: 10.1145/2659651.2659700.
+
+Jacob, N. and Brodley, C. (2006) Offloading IDS Computation to the GPU.
+
+Laurenson, T. (2013) Performance analysis of file carving tools.
+
+Marziale, L., Richard, G.G. and Roussev, V. (2007) 'Massive threading: Using GPUs to increase the performance of digital forensics tools', Digital Investigation, 4, pp. 73-81. doi: 10.1016/j.diin.2007.06.014.
+
+Škrbina, N. and Stojanovski, T. (2012) 'Using parallel processing for file carving'.
+
+\end{document}
+

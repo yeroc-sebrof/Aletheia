@@ -1,0 +1,37 @@
+OpenForensics Analysis Report\newline
+\newline
+Report Generated: 14:38 25-Apr-2019\newline
+---------------------------------------------\newline
+Case Reference: 10PDF\newline
+Evidence Reference: GPU ONLY\newline
+Technology Used: OpenCL (GeForce GTX 980 Ti - running 4 threads)\newline
+---------------------------------------------\newline
+Statistics:\newline
+-----------------------------\newline
+Bytes Analysed: 2000683008 (2 GB)\newline
+File Segments : 20\newline
+\newline
+Total Files Found: 10\newline
+Processing Time: 1.3 seconds\newline
+Processing Rate: 1540.58 MB/sec\newline
+-----------------------------\newline
+Result Breakdown:\newline
+-----------------------------\newline
+Target: pdf\newline
+Carved: 10\newline
+-----------------------------\newline
+File Index:\newline
+-----------------------------------------------------------------\newline
+Start Index  Finish Index 	 Size of File	 File Type\newline
+-----------------------------------------------------------------\newline
+334458880 	 334488545 		 28.9697 KB 	  pdf\newline
+539983872 	 540013537 		 28.9697 KB 	  pdf\newline
+829390848 	 829420513 		 28.9697 KB 	  pdf\newline
+862945280 	 862974945 		 28.9697 KB 	  pdf\newline
+1027112960 	 1027142625 	 28.9697 KB 	  pdf\newline
+1515749376 	 1515779041 	 28.9697 KB 	  pdf\newline
+1574469632 	 1574499297 	 28.9697 KB 	  pdf\newline
+1685618688 	 1685648353 	 28.9697 KB 	  pdf\newline
+1761116160 	 1761145825 	 28.9697 KB 	  pdf\newline
+1987608576 	 1987638241 	 28.9697 KB 	  pdf\newline
+----------------------------------------------------------------\newline

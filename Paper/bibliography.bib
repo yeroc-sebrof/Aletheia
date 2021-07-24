@@ -1,0 +1,79 @@
+
+% INTRODUCTION
+
+@INPROCEEDINGS{502676,
+author={A. Young and Moti Yung},
+booktitle={Proceedings 1996 IEEE Symposium on Security and Privacy},
+title={Cryptovirology: extortion-based security threats and countermeasures},
+year={1996},
+pages={129-140},
+keywords={computer viruses;cryptography;Cryptovirology;Trojan horses;confidentiality;cryptographic tools;cryptography;cryptovirus;extortion based attacks;information leakage;rogue software;viruses;Access control;Application software;Biological system modeling;Computer security;Invasive software;Organisms;Public key cryptography;Space technology;Viruses (medical);Weapons},
+doi={10.1109/SECPRI.1996.502676},
+ISSN={1081-6011},
+month={May},}
+
+@article{RefWorks:doc:5bb91f41e4b0867894fe017f,
+	author={Lodovico Marziale and Golden G. Richard and Vassil Roussev},
+	year={2007},
+	title={Massive threading: Using GPUs to increase the performance of digital forensics tools},
+	journal={Digital Investigation},
+	volume={4},
+	pages={73-81},
+	note={ID: TN_sciversesciencedirect_elsevierS1742-2876(07)00043-6},
+	abstract={The current generation of Graphics Processing Units (GPUs) contains a large number of general purpose processors, in sharp contrast to previous generation designs, where special-purpose hardware units (such as texture and vertex shaders) were commonly used. This fact, combined with the prevalence of multicore general purpose CPUs in modern workstations, suggests that performance-critical software such as digital forensics tools be “massively” threaded to take advantage of all available computational resources. Several trends in digital forensics make the availability of more processing power very important. These trends include a large increase in the average size (measured in bytes) of forensic targets, an increase in the number of digital forensics cases, and the development of “next-generation” tools that require more computational resources. This paper presents the results of a number of experiments that evaluate the effectiveness of offloading processing common to digital forensics tools to a GPU, using “massive” numbers of threads to parallelize the computation. These results are compared to speedups obtainable by simple threading schemes appropriate for multicore CPUs. Our results indicate that in many cases, the use of GPUs can substantially increase the performance of digital forensics tools.},
+	isbn={1742-2876},
+	doi={10.1016/j.diin.2007.06.014}
+}
+@article{RefWorks:doc:5bb27293e4b0e899a8a4749b,
+	author={Nebojša Škrbina and Toni Stojanovski},
+	year={2012},
+	title={Using parallel processing for file carving},
+	note={ID: TN_arxiv1205.0103},
+	abstract={File carving is one of the most important procedures in Digital Forensic Investigation (DFI). But it is also requires the most computational resources. Parallel processing on Graphics Processing Units have proven to be many times faster than when executed on standard CPU. This paper is inspecting the algorithms and methods to use parallel processing for development of file carving tools that will do their job much faster than the conventional DFI tools.}
+}
+@misc{RefWorks:doc:5bb27063e4b0764da1165681,
+	author = 	 {N. Jacob and C. Brodley},
+	year = 	 {2006},
+	title = 	 {Offloading IDS Computation to the GPU},
+	journal = 	 {Computer Security Applications Conference, 2006.ACSAC '06.22nd Annual},
+	pages = 	 {371-380},
+	note = 	 {ID: TN_ieee10.1109/ACSAC.2006.35},
+	abstract = 	 {Signature-matching intrusion detection systems can experience significant decreases in performance when the load on the IDS-host increases. We propose a solution that off-loads some of the computation performed by the IDS to the graphics processing unit (GPU). Modern GPUs are programmable, stream-processors capable of high-performance computing that in recent years have been used in non-graphical computing tasks. The major operation in a signature-matching IDS is matching values seen operation to known black-listed values, as such, our solution implements the string-matching on the GPU. The results show that as the CPU load on the IDS host system increases, PixelSnort's performance is significantly more robust and is able to outperform conventional Snort by up to 40%},
+	isbn = 	 {1063-9527},
+	doi={10.1109/ACSAC.2006.35}
+}
+@article{RefWorks:doc:5bb2703be4b0e87110f62037,
+	author={Xavier Bellekens and Christos Tachtatzis and Robert Atkinson and Craig Renfrew and Tony Kirkham},
+	year={2017},
+	title={GLoP: Enabling Massively Parallel Incident Response Through GPU Log Processing},
+	volume={2014-},
+	note={ID: TN_arxiv1704.02278},
+	abstract={Large industrial systems that combine services and applications, have become targets for cyber criminals and are challenging from the security, monitoring and auditing perspectives. Security log analysis is a key step for uncovering anomalies, detecting intrusion, and enabling incident response. The constant increase of link speeds, threats and users, produce large volumes of log data and become increasingly difficult to analyse on a Central Processing Unit (CPU). This paper presents a massively parallel Graphics Processing Unit (GPU) LOg Processing (GLoP) library and can also be used for Deep Packet Inspection (DPI), using a prefix matching technique, harvesting the full power of off-the-shelf technologies. GLoP implements two different algorithm using different GPU memory and is compared against CPU counterpart implementations. The library can be used for processing nodes with single or multiple GPUs as well as GPU cloud farms. The results show throughput of 20Gbps and demonstrate that modern GPUs can be utilised to increase the operational speed of large scale log processing scenarios, saving precious time before and after an intrusion has occurred.},
+	doi={10.1145/2659651.2659700}
+}
+@misc{RefWorks:doc:5ba93aace4b086d708a4a640,
+	author = 	 {T. Laurenson},
+	year = 	 {2013},
+	title = 	 {Performance analysis of file carving tools},
+	journal = 	 {IFIP Advances in Information and Communication Technology},
+	volume = 	 {405},
+	pages = 	 {419-434},
+	note = 	 {ID: TN_scopus2-s2.0-84920931436},
+	isbn = 	 {1868-4238}
+}
+@phdthesis{RefWorks:doc:5ba93864e4b00a8b09c8eec0,
+	author={Ethan Bayne},
+	year={2017},
+	title={Accelerating digital forensic searching through GPGPU parallel processing techniques},
+	note={ID: 44uad_purestudenttheses/702de12a-e10b-4daa-8baf-c2c57a501240},
+	abstract={Background
+String searching within a large corpus of data is a critical component of digital forensic (DF) analysis techniques such as file carving. The continuing increase in capacity of consumer storage devices requires similar improvements to the performance of string searching techniques employed by DF tools used to analyse forensic data. As string searching is a trivially-parallelisable problem, general purpose graphic processing unit (GPGPU) approaches are a natural fit. Currently, only some of the research in employing GPGPU programming has been transferred to the field of DF, of which, a closed-source GPGPU framework was used— Complete Unified Device Architecture (CUDA). Findings from these earlier studies have found that local storage devices from which forensic data are read present an insurmountable performance bottleneck.
+Aim
+This research hypothesises that modern storage devices no longer present a performance bottleneck to the currently used processing techniques of the field, and proposes that an open-standards GPGPU framework solution – Open Computing Language (OpenCL) – would be better suited to accelerate file carving with wider compatibility across an array of modern GPGPU hardware. This research further hypothesises that a modern multi-string searching algorithm may be better adapted to fulfil the requirements of DF investigation.
+Methods
+This research presents a review of existing research and tools used to perform file carving and acknowledges related work within the field. To test the hypothesis, parallel file carving software was created using C# and OpenCL, employing both a traditional string searching algorithm and a modern multi-string searching algorithm to conduct an analysis of forensic data. A set of case studies that demonstrate and evaluate potential benefits of adopting various methods in conducting string searching on forensic data are given. This research concludes with a final case study which evaluates the performance to perform file carving with the best-proposed string searching solution and compares the result with an existing file carving tool— Foremost.
+Results
+The results demonstrated from the research establish that utilising the parallelised OpenCL and Parallel Failureless Aho-Corasick (PFAC) algorithm solution demonstrates significantly greater processing improvements from the use of a single, and multiple, GPUs on modern hardware. In comparison to CPU approaches, GPGPU processing models were observed to minimised the amount of time required to search for greater amounts of patterns. Results also showed that employing PFAC also delivers significant performance increases over the BM algorithm. The method employed to read data from storage devices was also seen to have a significant effect on the time required to perform string searching and file carving.
+Conclusions
+Empirical testing shows that the proposed string searching method is believed to be more efficient than the widely-adopted Boyer-Moore algorithms when applied to string searching and performing file carving. The developed OpenCL GPGPU processing framework was found to be more efficient than CPU counterparts when searching for greater amounts of patterns within data. This research also refutes claims that file carving is solely limited by the performance of the storage device, and presents compelling evidence that performance is bound by the combination of the performance of the storage device and processing technique employed.}
+}

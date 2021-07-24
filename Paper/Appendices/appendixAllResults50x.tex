@@ -1,0 +1,87 @@
+\section{Results from repeated testing -- Windows}
+\label{sec:WindowsTesting}
+Tests were repeated here for 50 runs and have been averaged using a mean average.
+Throughput was measured using the standard $s = \dfrac{d}{t}$
+
+{\centering
+\begin{tabular}{c | c | c}
+400 MB & Milliseconds & MB/s \\
+\hline
+All Patterns & 1760.7 & 227.18 \\
+All Files & 1728.24 & 231.45 \\
+PDF Only & 1711.44 & 233.72 \\
+\end{tabular}
+\captionof{table}{Windows Results 400MB}
+\label{tab:WindowsTestingSumm400MB}
+\par}
+
+{\centering
+\begin{tabular}{ c | c | c }
+2GB & Milliseconds & MB/s \\
+\hline
+All Patterns & 5436.15 & 376.74 \\
+All Files & 5247.6 & 390.27 \\
+PDF Only & 5776.4 & 354.55 \\
+\end{tabular}
+
+\captionof{table}{Windows Results 2GB}
+\label{tab:WindowsTestingSumm2GB}
+\par}
+
+\newpage
+\section{Results from repeated testing -- Ubuntu}
+\label{sec:linuxTesting}
+Tests were repeated here for 50 runs and have been averaged using a mean average.
+Throughput was measured using the standard $s = \dfrac{d}{t}$
+
+\subsection{Ubuntu SSD}
+{\centering
+\begin{tabular}{ c | c | c }
+2GB & Time Taken & MB/s \\
+\hline
+PDF Only & 5481.78 & 373.60 \\
+"Files that exist" & 5536.78 & 369.89 \\
+%All files & 24512.76 & 83.5483234 \\
+All files & 6025.65 & 339.88 \\
+\end{tabular}
+\captionof{table}{Ubuntu Average Results 2GB SSD}
+\label{tab:UbuntuTestingSumm2GBSSD}
+\par}
+
+\subsection{Ubuntu Ram-Disk}
+\label{sec:aletheiaRamDisk}
+{\centering
+\begin{tabular}{ c | c | c }
+400MB & Time Taken & MB/s \\
+\hline
+PDF Only & 3057.73 & 130.82 \\
+Files that exist & 2893.54 & 138.24 \\
+All files & 2893.54 & 130.39 \\
+\end{tabular}
+\captionof{table}{Ubuntu Average Results 400MB RAM}
+\label{tab:UbuntuTestingSumm400MBRAM}
+\par}
+
+{\centering
+\begin{tabular}{ c | c | c }
+2GB & Time Taken & MB/s \\
+\hline
+PDF Only & 5481.78 & 373.60 \\
+"Files that exist" & 5536.78 & 369.89 \\
+All files & 6006.96 & 340.94 \\
+\end{tabular}
+\captionof{table}{Ubuntu Average Results 2GB RAM}
+\label{tab:UbuntuTestingSumm2GBRAM}
+\par}
+
+{\centering
+\begin{tabular}{ c | c | c }
+10GB & Time Taken & MB/s \\
+\hline
+PDF Only & 24512.76 & 417.74 \\
+FIles that exist & 24496.72 & 418.02 \\
+All files & 24501.12 & 417.94 \\
+\end{tabular}
+\captionof{table}{Ubuntu Average Results 10GB RAM}
+\label{tab:UbuntuTestingSumm10GbRAM}
+\par}

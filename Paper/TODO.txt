@@ -1,0 +1,7 @@
+> Witty sentence page (bit before acknowledgements)
+> Acknowledgements
+> Abstract 
+> 1.2: Go into more detail about what GPGPU is? -- I've been more verbose with my use of the \ac for both GPU and GPGPU to bring better attention as to what I mean. Will that do?
+> 2: Add details at places with a * comment (more details with said comments)
+> 3.3: Go into more detail about what RAD is
+> 4.2.1: (HTML bit) describe what the figures show and why those results were incorrect

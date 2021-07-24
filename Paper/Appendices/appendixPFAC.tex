@@ -1,0 +1,48 @@
+\section{Iterations of the PFAC algorithm}
+\label{sec:PFACappendix}
+
+\subsection{Code}
+Overall the code that drive the Aletheia Header/Footer search can be seen in the final Git hub project:
+\underline{\href{https://github.com/yeroc-sebrof/Aletheia}{here}} or through the link https://github.com/yeroc-sebrof/Aletheia
+
+The code that contains the fully integrated CPU method is contained within a folder within the Aletheia Git hub project;
+
+\href{https://github.com/yeroc-sebrof/Aletheia/blob/master/Prod/Previous/MultiCPU.cpp}{yeroc-sebrof/Aletheia/blob/master/Prod/Previous/MultiCPU.cpp}
+
+This code currently runs on multiple CPU threads.
+This method was able to be run in a single thread also by un-commenting line 181 and 203, and commenting line 177, 178, 183, 184, 189, 199, 200, 205, 206, and 211.
+
+\subsection{Results}
+Due to the time taken for this search on the CPU it was deemed reasonable to conduct the tests with a smaller number of run times.
+Testing of the single threaded PFAC file header search was extremely slow and was only run twice to confirm the first result given.
+The multi-threaded PFAC search obviously improved upon this design and was able to demonstrate performance gains.
+This was only run run 10 times however.
+
+The test here makes use of the 400MB test case from Section \ref{sec:AllFileTypes} and can be compared to the results in \ref{sec:400MBAppendixResults}.
+Test results averaged to: 
+
+{\centering
+\begin{tabular}{c | c | c}
+400 MB & Milliseconds & MB/s \\
+\hline
+PDF Only & 542507 & 3.69 \\
+All Files & 108455.2 & 0.74 \\
+\end{tabular}
+\captionof{table}{Windows Single CPU Results 400MB}
+\label{tab:windowsTestSingleCPU}
+\par}
+
+
+
+{\centering
+\begin{tabular}{c | c | c}
+2 GB & Milliseconds & MB/s \\
+\hline
+PDF Only & 35661.8 & 11.22 \\
+All Files & 156529.4 & 2.56 \\
+\end{tabular}
+\captionof{table}{Windows Multi CPU Average Results 400MB}
+\label{tab:windowsTestMultiCPU}
+\par}
+
+Throughput was measured using the standard $s = \dfrac{d}{t}$

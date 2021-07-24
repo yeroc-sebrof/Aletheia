@@ -1,0 +1,117 @@
+%- A record of important contributions to your field of work by others and a critical evaluation of the work to date.
+%- A more in-depth and focused discussion than in your proposal
+%- Focus on actual technologies now being used
+%- Current state of play
+%- Start with short introduction of what chapter is about
+%- References to support arguments
+%- Lead reader to same position as you
+%- End with Summary of significant points leading in to your methodology
+%- Guide (1500-2000 Words) -- Currently 1968
+
+\chapter{Literature Review}
+\label{chap:chapter2}
+\section*{Bayne, 2017}
+The paper ``Accelerating Digital Forensic searching through \ac{GPGPU} Parallel Processing Techniques'' investigates how \ac{GPGPU} hardware can be used to improve the file carving process; in doing so a final product that makes use of these \ac{GPGPU} methods -- named OpenForensics -- was created.
+OpenForensics is written in C\# and makes use of the Cudafy.net library which allows the language to communicate with \ac{GPGPU} assets.
+The library that was used also provides an interface which allows the developer to make use of either CUDA or OpenCL, the library also only uses the simpler CUDA syntax.
+Due to Dr Bayne’s usage of OpenCL for this tool, tests that make use of the Integrated Graphics Processor were also included in the paper; such testing shows that even the simple \ac{IGP}s are capable of processing at speeds that exceed the \ac{CPU}.
+
+All the testing within this paper was broken down into 5 case studies:
+\begin{enumerate}[noitemsep, topsep=0pt]
+    \item Using \ac{GPU}'s to conduct string searching
+    \item Utilising asynchronous parallel techniques
+    \item Employing the \ac{PFAC} algorithm
+    \item An investigation into data reading performance
+    \item And applying all the proposed string searching methods to conduct file carving.
+\end{enumerate}
+
+Case Study 4 was of particular interest to the researcher as the OpenForensics paper demonstrates testing into the `theoretical maximum throughput’ of Backing Storage on a host.
+This testing is performed on multiple platforms with verbose specifications being detailed within the paper,
+which helps to expand the understanding of what is the true data throughput.
+This case study also aided with the researchers understanding as to what previously would have limited File Carving programs.
+
+The standout proof of improvement from existing methods lies in comparing performance. Peak performance seen from OpenForensics was clocked at -- the theoretical maximum possible -- roughly 947 \ac{MB}/s (Bayne, 2017, Page 104).
+Compare this to the recorded peak speed from the tool Foremost on the same device as mentioned above at roughly 190 \ac{MB}/s (Bayne, 2017, Page 55).
+This clearly shows considerable improvement and this improvement could continue to be measured if the hardware could keep up with the data requests.
+
+\section*{Jacob and Brodley, 2006}
+The idea of making use of \ac{GPGPU}s for pattern matching was originally a proof of concept in the paper: ``Offloading \ac{IDS} Computation to the \ac{GPU}'' (Jacob and Brodley, 2006).
+Although this use case of the pattern matching in this paper was for an \ac{IDS} system, the concept fits within the use case of File Carving.
+
+Initially the paper explains that with the real-time need for data processing, the Boyer-Moore algorithm will have its limits as it does not scale appropriately for many needles in each haystack.
+As such it is recommended that Multi-String searching algorithms should be used to avoid any issues; this paper goes onto recommend the use of algorithms such as Aho-Corasick.
+Many of the lessons learned from this section of the paper still apply today.
+Jacob and Brodley worked to ensure the theoretical elements of the application are still applicable to modern methods; it is also likely with the advancements made in the frameworks they would be more effective too.
+
+The Paper then continues to discuss the practical hurdles that were encountered in the creation of a \ac{GPU} enabled search.
+At this time established frameworks like CUDA and OpenCL were not available; this required the developers to mistreat a legacy version of the OpenGL framework to perform a search.
+By exploiting the OpenGL platform to "process pixel maps", which are in fact groupings of packets, they were able move this tasking onto the \ac{GPU}s in their testing.
+When there were no patterns discovered the pixel maps were then discarded.
+Furthermore, due to the design of \ac{GPU}s at this time Jacob and Brodley encountered issues regarding Vertex and Fragment processors.
+At this time General-Purpose \ac{GPU}s were not quite established and the processing was split between these two processors.
+The fragment processor in this case was the closest thing to a General-Purpose Processor on the \ac{GPU} that was available.
+Finally, during the testing of this implementation, strange issues were discovered relating to Asymmetric Upload and Download speeds.
+It was found that, due to the lack of requirements for it at this time, pixel maps took considerably more time to be downloaded from the device than they took to upload.
+\section*{Skrbina and Stojanovski, 2012}
+After reviewing a previous attempt at a \ac{GPU} enabled file carver Škrbina and Stojanovski released an investigative piece into the theory of ’Using parallel processing for file carving’.
+The paper takes a very broad approach to the discussion laid forth in its title.
+The following are the subject areas under discussion: \ac{GPGPU} archetypes, Digital Forensics Investigations, and File Carving.
+All of these also come with a perspective more reflective of the newer technologies made available since Jacob and Brodley’s attempt.
+Due to the quantity of papers that make reference to this paper, it can be assumed that it has successfully functioned as a solid base to open the discussion of parallel processing in a digital forensics context.
+This paper’s function was just that however, a discussion piece, the subject area was only considered and discussed by the researchers.
+No practical work was released alongside the paper nor has any work emerged from the authours following its release in the research area since.
+
+\section*{Mariale, Richard, Roussev, 2007}
+One paper Škrbina and Stojanovski appear to not have been given enough credit to was ``Massive threading: Using \ac{GPU}’s to increase the performance of digital forensics tools''.
+Mariale, Richard and Roussev, head developers for the well-known file carving tool Scalpel tested the use of \ac{GPGPU} assets within their tool.
+This attempt was released while CUDA was in beta and contains the earliest found use case of \ac{GPGPU} file carving.
+Their final product can still be accessed, this Linux based version can be compiled when specifically flagged in the setup script to do so and when the dig.cu file can be located as it is not easily available in their repository.
+To quote from the readme of this tools GitHub page ``The \ac{GPU}-enhanced version of Scalpel is able to do preview carving at rates that exceed the disk bandwidth of most file servers''.
+Clearly the tool worked well but without the \ac{SSD} technology that is so readily available today the acceleration processing speed fell short when the hard drive reached capacity.
+
+Regardless of their usage of a Hard disk, the 7200 RPM SATA Hard drive did not stop them from achieving -- using the NVidia GeForce 8800 GTX -- a top speed of 446 seconds when scanning a 20 GB disk image.
+In this achievement they recognised four simple design principles:\\
+\begin{enumerate}[noitemsep, topsep=0pt]
+    \item Disk Activity must be kept to a minimum
+    \item Binary searches must be as efficient as possible
+    \item Where possible False Positives should be phased out
+    \item Time to perform detection/processing of discovered files should be kept to a\\minimum
+\end{enumerate}
+
+Unfortunately, in their efforts they only mention the use of a Boyer-Moore search which is ill suited to \ac{GPGPU} based searching.
+As such it is clear they achieved their goal making use of the available hardware in their tests but their if they weren’t limited by the bottleneck from the Hard disk they would be able to recognise where \ac{BM} would have let them down.
+If they were able to make use of \ac{SSD} technology there is no doubt that they could have continued to see improvement.
+\newline
+\newline
+\newline
+\section*{Laurenson, 2013}
+The paper ``Performance analysis of file carving tools’’ helps to give perspective as to the current throughput of the file carving tools available to users.
+In this paper the tools; EnCase, FTK, WinHex, PhotoRec, Scalpel, and Foremost, are compared and measured with various examples.
+The metrics that were taken can be listed as:
+\begin{enumerate}[noitemsep, topsep=0pt]
+    \item Carving Recall: tools ability to carve the files correctly
+    \item Supported Recall: File types the tool can carve
+    \item Carving Precision: The `correctness’ of the tool where a low score dictates false positives being carved
+    \item Carving F measure: A combination of recall and precision scores for an overall tool score
+    \item and Processing Speed: The throughput of data that the tool can perform its task
+\end{enumerate}
+
+Of all the tools that were tested, all of which were \ac{CPU} based, the best processing speed is from Foremost which was recorded at 62 \ac{MB}/s (Laurenson, 2013, Page 11).
+Although Foremost's ability to carve files was less impressive, with a carving recall rate of $70.8\%$.
+PhotoRec and WinHex drew for the highest score of the remaining categories, as summarised in their `Carving F measure' score of $99.6\%$, where WinHex was able to process between the two of them 0.5x faster (totalling 31\ac{MB}/s).
+Although methods to combine WinHex's precision and Foremost's speed must exist this paper was only here to compare them.
+With Foremost holding the top speed as a best case scenario from all of the discussed file-carving tools, it acts as an interesting insight into how long this procedure can take when limited to \ac{CPU}.
+
+\section*{Bellekens et al., 2017}
+The potential benefits involved in the use of a correctly implemented \acl{PFAC} algorithm as an alternative to the Boyer-Moore Algorithm are great, but further improvements can be made to the \ac{PFAC} algorithm.
+Dr Bellekens et al. published the paper “GLOP: Massively Parallel Incident Response through \ac{GPU} Log Processing” where they make use of the \ac{PFAC} algorithm on \ac{GPU} and compare the run-time performance to the Knuth Morris Pratt algorithm on \ac{CPU}; the testing here may have been better if the comparison was between the Aho-Corasick on \ac{CPU} with \ac{PFAC} on \ac{GPU}.
+
+This paper discusses changes that could be made to improve performance of the \ac{PFAC} algorithm with the focus of Deep Packet Examination.
+In this use case, some of the patterns that were being searched for were of considerable size.
+Prefix patterns could instead be used to reduce the pattern tree, patterns would be truncated to 8 characters and through testing it was discovered that as a result there was a $0.0001\%$ chance to match with a false positive.
+This would not only reduce the processor cycles taken to successfully match with a pattern but would reduce the pattern size to better fit into cache memory throughout.
+
+Furthermore, within the use case of CUDA it was discovered that texture memory could be used to hold the pattern table for an up to, $40\%$ increase in efficiency. Unrelated to the \ac{PFAC} performance boost, it was found that for product evaluations of the implemented search to reduce the chance of ``Jitter'' interfering with test results testing should be ran many times in order to discern an average.
+
+Overall by showing optimisations and their subsequent result this paper was useful and the optimisations of a correctly implemented \ac{PFAC} algorithm would show in the results significantly.
+Moreover, as file carving tools require a secondary thread of processing to handle the results that are offloaded by the \ac{GPU}, this confirmation check based on the Prefix patterns was a  consideration worth implementing.

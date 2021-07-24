@@ -1,0 +1,45 @@
+%- What conclusions can you draw from your investigation?
+%- What are the implications of what you have discovered?
+%- How might further work in this area be continued?
+%- Guide -750 - 1000 words
+
+\chapter{Conclusion}
+In conclusion, the results seen from the \acl{GPGPU} header/footer search compared to both Scalpel and Foremost far exceed the expectations of the researcher.
+Initial expectations were that processing would have increased by roughly a factor of 5.
+Moreover, said expectations were that the contents of this research could be applied to a full file carver as a final product.
+
+After the scope was reduced to conform with the time available, research was then limited to the creation of a file header/footer searching platform; named Aletheia after the translated Ancient Greek for ``truth or disclosure in philosophy''.
+Through testing it was shown that the speed at which file header/footer searches far exceed that of CPU tools.
+In one example, this difference was measured at 15 times greater data throughput when compared to the Scalpel platform.
+The differences between these platforms are believed to be adequately drawn out and discussed through this investigation;
+not only for the purpose of understanding the downfalls of the CPU tools but for setting up an adequate comparison.
+Improvements that could be made to these platforms have also been discussed.
+
+Development in this, somewhat niche, field of computing science is very important to not only the researcher but for law enforcement organisations.
+Although file carving abilities were not developed, due to being out of scope, it is hoped that the file search that was developed through this research could be continued into another functioning, open-source file carver that is available to Digital Forensics investigators.
+Access to a wider array of tools can be very important for not only confirmation of evidence but also for continued support in driving growth within the sector.
+It is hoped that with more research into this subject area that the ever growing divide between digital crime and digital forensics will recede, even if just temporarily.
+\newpage
+\section{Future Work}
+\subsubsection*{Continuous Development to Aletheia}
+The work that was put into the implementation of the Aletheia platform could still be subject to improvement.
+The developer has many areas they would wish to expand their work but it can be reduced to the following few points.
+
+Solving the issues in Section \ref{sec:HTMLissue} would be a big step in ensuring the integrity of results for future iterations.
+Looking into the existing Scalpel and Foremost codebases' would provide great insight as to what elements were poorly designed in the fileChunkingClass.
+Following this it would be good to optimise the existing code and/or the include file carving elements.
+
+It would also be useful to have the tool dynamically adjust to the environment that the tool finds itself in.
+Aletheia could be configured to adjust itself to the GPU dynamically allocating GPU processor block sizes and to (V)RAM by allocating memory buffers.
+
+Finally adding run time options along with general usability comparable to existing platforms would be a useful edition.
+Being able to define the program behaviour without redefining the program would be of great use.
+
+\subsubsection*{OpenCL}
+With the knowledge from this paper and the existing code base, an OpenCL variant of the platform could be implemented.
+Depending on the syntax differences or even a possible equivalent to Cudafy.net for C++, the existing code could potentially be adjusted to conform the OpenCL library.
+This would hopefully also continue to attempt execution on multiple platforms.
+
+\subsubsection*{Memory forensics}
+The concepts from this research or the Aletheia platforms itself could be adjusted to be used in a Memory Forensics environment.
+Real time monitoring of Virtual Machine RAM contents could be executed in the event the platform was able to perform quick enough.
