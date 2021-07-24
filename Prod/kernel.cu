@@ -1,4 +1,4 @@
-#include "../../fileChunkingClass/fileHandler.h"
+#include "fileChunkingClass/fileHandler.h"
 
 #include <chrono>
 #include <algorithm>

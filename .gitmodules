@@ -1,0 +1,6 @@
+[submodule "fileChunking"]
+	path = fileChunking
+	url = https://github.com/yeroc-sebrof/fileChunkingClass
+[submodule "Prod/fileChuckingClass"]
+	path = Prod/fileChuckingClass
+	url = https://github.com/yeroc-sebrof/fileChunkingClass
