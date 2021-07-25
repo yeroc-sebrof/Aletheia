@@ -455,7 +455,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		printf("\nNo Matches");
+		cout << endl << "No Matches";
 	}
 
 	// Test case showed that remainder doesn't work as intended when you consider file chunks bigger than the file itself
