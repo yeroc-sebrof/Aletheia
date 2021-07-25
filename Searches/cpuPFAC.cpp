@@ -1,7 +1,7 @@
 #include <array>
 #include <cstdio>
 #include <vector>
-#include <string>
+#include <cstring>
 #include <algorithm>
 
 using std::pair;

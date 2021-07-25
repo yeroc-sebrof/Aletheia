@@ -8,16 +8,12 @@
 // define the types between unix and windows
 
 #ifdef _WIN32
-
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #define tablePointerType uint16_t
-
-#elif // _WIN32
-
+#else // _WIN32
 // fix this to have a different unix compat type
 #define tablePointerType uint16_t
-
 #endif
 
 #include <thrust/device_vector.h>

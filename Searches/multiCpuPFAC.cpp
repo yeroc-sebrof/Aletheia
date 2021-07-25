@@ -1,6 +1,6 @@
 #include <cstdio>
 #include <vector>
-#include <string>
+#include <cstring>
 #include <thread>
 #include <algorithm>
 #include <mutex>
